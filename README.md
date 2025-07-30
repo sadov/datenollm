@@ -1,4 +1,4 @@
-# Dateno Utilities
+# Dateno LLM
 
 Framework and utilities for interacting with Dateno LLM services.
 
