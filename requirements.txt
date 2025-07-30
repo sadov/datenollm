@@ -1,0 +1,10 @@
+gradio==5.36.2
+langchain==0.3.26
+gradio-client==1.10.4
+# datenocmd
+git+https://github.com/datenoio/datenocmd
+PyYAML
+typer
+tabulate
+flatdict
+requests
