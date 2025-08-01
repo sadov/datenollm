@@ -1,5 +1,167 @@
 import json
+import os
 import sys
+from pathlib import Path
+
+# Path constants
+DRIVE_PATH = '/content/drive/MyDrive'
+LOCAL_BASE_PATH = '.'
+
+def is_colab_environment():
+    """Checks if the code is running in Google Colab"""
+    try:
+        import google.colab
+        return True
+    except ImportError:
+        return False
+
+def mount_drive_if_needed():
+    """Mounts Drive if necessary and we are in Colab"""
+    if is_colab_environment():
+        try:
+            from google.colab import drive
+            if not os.path.exists('/content/drive'):
+                print("Connecting Google Drive...")
+                drive.mount('/content/drive')
+                print("Google Drive connected successfully!")
+            else:
+                print("Google Drive already connected")
+        except Exception as e:
+            print(f"Error connecting Google Drive: {e}")
+            return False
+    return True
+
+def get_full_path(file_path, base_path=None):
+    """
+    Returns the full path to the file depending on the environment
+    
+    Args:
+        file_path (str): Relative or absolute path to the file
+        base_path (str): Base path for the environment
+    
+    Returns:
+        str: Full path to the file
+    """
+    # If the path is already absolute, return as is
+    if os.path.isabs(file_path):
+        return file_path
+    
+    if is_colab_environment():
+        # In Colab we work with Google Drive
+        mount_drive_if_needed()
+        if not base_path:
+            base_path = DRIVE_PATH
+        # If the path doesn't start with base_path, add prefix
+        if not file_path.startswith(base_path):
+            full_path = os.path.join(base_path, file_path)
+        else:
+            full_path = file_path
+    else:
+        if not base_path:
+            base_path = LOCAL_BASE_PATH
+        # In local environment we work with local file system
+        full_path = os.path.join(base_path, file_path)
+        # Convert to absolute path
+        full_path = os.path.abspath(full_path)
+    
+    return full_path
+
+def file_exists(file_path):
+    """
+    Checks if the file exists in the current environment
+    
+    Args:
+        file_path (str): Path to the file
+    
+    Returns:
+        bool: True if the file exists, False otherwise
+    """
+    try:
+        full_path = get_full_path(file_path)
+        exists = os.path.exists(full_path)
+        
+        if is_colab_environment():
+            print(f"Checking file in Google Drive: {full_path}")
+        else:
+            print(f"Checking file locally: {full_path}")
+            
+        return exists
+    except Exception as e:
+        print(f"Error checking file existence: {e}")
+        return False
+
+def create_directory_if_not_exists(dir_path):
+    """
+    Creates directory if it doesn't exist
+    
+    Args:
+        dir_path (str): Path to the directory
+    
+    Returns:
+        bool: True if directory was created or already exists
+    """
+    try:
+        full_path = get_full_path(dir_path)
+        Path(full_path).mkdir(parents=True, exist_ok=True)
+        return True
+    except Exception as e:
+        print(f"Error creating directory: {e}")
+        return False
+
+def list_files(dir_path="", pattern="*"):
+    """
+    Returns list of files in the directory
+    
+    Args:
+        dir_path (str): Path to the directory (default is root)
+        pattern (str): Pattern for file search (default is all files)
+    
+    Returns:
+        list: List of found files
+    """
+    try:
+        full_path = get_full_path(dir_path)
+        path_obj = Path(full_path)
+        
+        if not path_obj.exists():
+            print(f"Directory doesn't exist: {full_path}")
+            return []
+        
+        files = list(path_obj.glob(pattern))
+        return [str(f) for f in files if f.is_file()]
+    except Exception as e:
+        print(f"Error getting file list: {e}")
+        return []
+
+def get_file_info(file_path):
+    """
+    Returns information about the file
+    
+    Args:
+        file_path (str): Path to the file
+    
+    Returns:
+        dict: Dictionary with file information or None if file doesn't exist
+    """
+    try:
+        full_path = get_full_path(file_path)
+        
+        if not os.path.exists(full_path):
+            return None
+        
+        stat_info = os.stat(full_path)
+        
+        return {
+            'path': full_path,
+            'size': stat_info.st_size,
+            'modified': stat_info.st_mtime,
+            'is_file': os.path.isfile(full_path),
+            'is_directory': os.path.isdir(full_path),
+            'environment': 'colab' if is_colab_environment() else 'local'
+        }
+    except Exception as e:
+        print(f"Error getting file information: {e}")
+        return None
 
 def read_json_file(file_path, encoding='utf-8'):
     try:
@@ -26,3 +188,29 @@ def save_json_file(data, file_path, encoding='utf-8'):
     except Exception as e:
         print(f"Error saving JSON file {file_path}: {e}", file=sys.stderr)
         sys.exit(1)
+
+
+# Usage example
+def fs_test():
+    # Testing functions
+    print(f"Environment: {'Google Colab' if is_colab_environment() else 'Local system'}")
+    
+    # Check file existence
+    test_file = "test.txt"
+    print(f"File {test_file} exists: {file_exists(test_file)}")
+    
+    # Get full path
+    print(f"Full path: {get_full_path(test_file)}")
+    
+    # Create directory
+    create_directory_if_not_exists("test_folder")
+    
+    # List files
+    files = list_files()
+    print(f"Found files: {len(files)}")
+    
+    # File information
+    info = get_file_info(test_file)
+    if info:
+        print(f"File information: {info}")
+

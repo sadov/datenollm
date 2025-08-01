@@ -1,38 +1,19 @@
 from datetime import datetime
 import json
-import os
-from pathlib import Path
 
-from google.colab import drive
 import pandas as pd
 
 import ipywidgets as widgets
-from IPython.display import display
 
+from file_utils import (
+    mount_drive_if_needed,
+    get_full_path,
+    file_exists,
+    read_json_file,
+    save_json_file
+)
 
-# Connect Google Drive
-def mount_drive_if_needed():
-    """Connects Drive if it is not already connected"""
-    if not os.path.exists('/content/drive'):
-        drive.mount('/content/drive')
-
-def drive_path_name(file_path):
-    """Returns full path to file"""
-    mount_drive_if_needed()
-
-    # If the path does not start with /content/drive, add a prefix
-    if not file_path.startswith(DRIVE_PATH):
-        file_path = f'{DRIVE_PATH}/{file_path}'
-
-    return file_path
-
-def file_exists(file_path):
-    """Simple check for file existence"""
-    file_path = drive_path_name(file_path)
-    exists = os.path.exists(file_path)
-
-    return exists
-
+DRIVE_PATH = '/content/drive/MyDrive'
 
 def ask_llm(client, query, context_file=None, history_file=None, params=None):
   if not query:
@@ -41,16 +22,16 @@ def ask_llm(client, query, context_file=None, history_file=None, params=None):
   history = []
 
   if context_file:
-    context_file = drive_path_name(context_file)
+    context_file = get_full_path(context_file, DRIVE_PATH)
     print(f'{context_file=}')
 
     if file_exists(context_file):
       history.extend(read_json_file(context_file))
 
   if history_file:
-    history_file = drive_path_name(history_file)
+    history_file = get_full_path(history_file, DRIVE_PATH)
   else:
-    history_file = drive_path_name('history.json')
+    history_file = get_full_path('history.json', DRIVE_PATH)
 
   print(f'{history_file=}')
 
@@ -63,10 +44,7 @@ def ask_llm(client, query, context_file=None, history_file=None, params=None):
   params['history'] = history
   params = json.dumps(params)
 
-  result = client.ask(query, history, prompt, model,
-                      max_tokens, temperature, top_p)
-
-  #result = client.predict(message=query, params=params, api_name="/ask_llm")
+  result = client.predict(message=query, params=params, api_name="/ask_llm")
 
   history.append({'role': 'user', 'metadata': None, 'content': query, 'options': None})
   history.append({'role': 'assistant', 'metadata': None, 'content': result, 'options': None})
@@ -75,8 +53,8 @@ def ask_llm(client, query, context_file=None, history_file=None, params=None):
   return query, result, history, None
 
 def history2context(history_file, context_file):
-  history_file = drive_path_name(history_file)
-  context_file = drive_path_name(context_file)
+  history_file = get_full_path(history_file, DRIVE_PATH)
+  context_file = get_full_path(context_file, DRIVE_PATH)
   history = read_json_file(history_file)
   context = []
   for item in history:
@@ -93,7 +71,7 @@ class ChatWidget:
     def __init__(self, history_file='history.json'):
         self.like = None
         mount_drive_if_needed()
-        self.history_file = drive_path_name(history_file)
+        self.history_file = get_full_path(history_file, DRIVE_PATH)
         self.load_history()
         self.create_widgets()
 
@@ -104,7 +82,6 @@ class ChatWidget:
           self.history = []
 
     def save_history(self):
-        metadata = self.history[-1]['metadata']
         save_json_file(self.history, self.history_file)
 
     def create_widgets(self):
@@ -191,17 +168,17 @@ class ChatWidget:
                 out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
                 queries=json.loads(item['content'])
                 for query in queries['queries']:
-                    out += f'<div style="margin:0.2em 0 0.7em 1.5em;">'
+                    out += '<div style="margin:0.2em 0 0.7em 1.5em;">'
                     out += f"<strong>Dateno query:</strong> <em>{query['query']}</em> "
                     if query['filters']:
                         out += '&nbsp;&nbsp;&nbsp;&nbsp;<strong>Filters:</strong>'
                         for f in query['filters']:
                             out += f"&nbsp;&nbsp;{f['name']}={f['value']}"
-                    out += "</div>" #<br>"
+                    out += "</div>"
         return out
 
     def last_history_out(self):
-        out = self._history2html(self.history[-2:]) # Last question & answer
+        out = self._history2html(self.history[-2:])
         return out
 
     def history_out(self):
@@ -209,17 +186,13 @@ class ChatWidget:
         return out
 
     def get_result_text(self):
-        #return f"<b>Like: {self.like}</b>"
         return self.last_history_out()
 
     def display(self):
-        history = widgets.HTML(self.history_out())
         buttons = widgets.HBox([self.like_btn, self.dislike_btn, self.none_btn])
-        #return widgets.VBox([self.result_label, buttons, history])
         return widgets.VBox([self.result_label, buttons])
 
 def dateno2df(results):
-    # Создаем DataFrame напрямую из вложенной структуры
     df_data = []
     for result in results:
         df_data.append({
@@ -230,17 +203,10 @@ def dateno2df(results):
         })
 
     df = pd.DataFrame(df_data)
-
-    # Выбираем только нужные поля для отображения
-    #display_df = df[['html_link', 'description']]
     display_df = df[['datasets']]
 
-    # Сохраняем в HTML
-    html = display_df[2:6].to_html(escape=False)
+    return display_df
 
-    retutn display_df
-
-# Создаем стилизованную таблицу для Jupyter
 def display_left_aligned_table(df):
     html_table = df.to_html(escape=False, table_id='nb-table')
 
