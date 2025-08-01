@@ -4,7 +4,7 @@ import json
 import argparse
 import sys
 
-from datenollm.client import like, get_conversation_from_csv
+from datenollm.client import DatenoClient, get_conversation_from_csv
 
 def main():
     parser = argparse.ArgumentParser(description='Flag logs in the app')
@@ -27,13 +27,8 @@ def main():
         print(f"Conversation with index {args.index} not found in {args.csv_path}", file=sys.stderr)
         sys.exit(1)
 
-    #conversation = json.dumps(conversation)
-    print(f'{args.addr=}')
-    print(f'{index=}')
-    print(f'{flag=}')
-    print(f'{conversation=}')
-    result = like(args.addr, index, flag, conversation)
-    #print(result)
+    client = DatenoClient(args.addr)
+    result = client.like(index, conversation, flag)
 
 if __name__ == "__main__":
     main()

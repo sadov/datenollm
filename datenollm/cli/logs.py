@@ -2,7 +2,7 @@
 
 import argparse
 
-from datenollm.client import logs
+from datenollm.client import DatenoClient
 
 def main():
     parser = argparse.ArgumentParser(description='Download logs from the app')
@@ -10,7 +10,9 @@ def main():
                         help='Client address (e.g. http://127.0.0.1:7861/ or hf_space)')
     args = parser.parse_args()
     
-    result = logs(args.addr)
+    client = DatenoClient(args.addr)
+    result = client.get_logs()
+
     print(result)
 
 if __name__ == "__main__":

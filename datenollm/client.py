@@ -17,10 +17,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class DatenoClient:
-    def __init__(self, client_addr):
-        self.client = Client(client_addr, hf_token=os.environ.get('HF_TOKEN'))
+    def __init__(self, client_addr, hf_token=None):
+        if not hf_token:
+            hf_token=os.environ.get('HF_TOKEN')
+        self.client = Client(client_addr, hf_token)
 
-    def ask(self, query, history_path=None, prompt_path=None, model=None, max_tokens=None, temperature=None, top_p=None):
+    def ask(self, query, history_path=None, prompt_path=None,
+            model=None, max_tokens=None, temperature=None, top_p=None):
         params = {}
         if prompt_path:
             params['prompt'] = read_text_file(prompt_path)
@@ -67,24 +70,6 @@ class DatenoClient:
             like=like,
             api_name="/like"
         )
-
-def ask(addr, query,
-        history=None, prompt=None, model=None,
-        max_tokens=None, temperature=None, top_p=None):
-    client = DatenoClient(addr)
-    result = client.ask(query, history, prompt, model,
-                        max_tokens, temperature, top_p)
-    return result
-
-def like(addr, index, flag, conversation):
-    client = DatenoClient(addr)
-    result = client.like(index, conversation, flag)
-    return result
-
-def logs(addr):
-    client = DatenoClient(addr)
-    result = client.get_logs()
-    return result
 
 def read_flagged_log_csv(file_path):
     """

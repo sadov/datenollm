@@ -21,10 +21,6 @@ def main():
             elif isinstance(msg, AIMessage):
                 print('------------------------------------')
                 print(f"AI: {msg.content}")
-                # Print evaluation if present
-                value = msg.additional_kwargs.get('value') if hasattr(msg, 'additional_kwargs') else None
-                if value:
-                    print(f"Evaluation of the response: {value}")
                 # Print all options if present
                 if hasattr(msg, 'additional_kwargs') and msg.additional_kwargs:
                     print(f"Options: {msg.additional_kwargs}")
