@@ -5,7 +5,7 @@ import pandas as pd
 
 import ipywidgets as widgets
 
-from file_utils import (
+from .file_utils import (
     mount_drive_if_needed,
     get_full_path,
     file_exists,
