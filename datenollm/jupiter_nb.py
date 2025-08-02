@@ -44,7 +44,7 @@ def ask_llm(client, query, context_file=None, history_file=None, params=None):
   params['history'] = history
   params = json.dumps(params)
 
-  result = client.predict(message=query, params=params, api_name="/ask_llm")
+  result = client.ask(message=query, history_path=history_file)
 
   history.append({'role': 'user', 'metadata': None, 'content': query, 'options': None})
   history.append({'role': 'assistant', 'metadata': None, 'content': result, 'options': None})

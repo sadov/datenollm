@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 # Path constants
-DRIVE_PATH = '/content/drive/MyDrive'
+DRIVE_PATH = '/content/drive/MyDrive/colab_data/dateno/'
 LOCAL_BASE_PATH = '.'
 
 def is_colab_environment():
