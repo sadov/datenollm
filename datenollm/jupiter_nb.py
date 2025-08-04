@@ -68,10 +68,13 @@ def history2context(history_file, context_file):
   save_json_file(context, context_file)
 
 class ChatWidget:
-    def __init__(self, history_file='history.json'):
+    def __init__(self, history_file=None):
         self.like = None
         mount_drive_if_needed()
-        self.history_file = get_full_path(history_file, DRIVE_PATH)
+        if history_file:
+            self.history_file = get_full_path(history_file, DRIVE_PATH)
+        else:
+            self.history_file = get_full_path('history.json', DRIVE_PATH)
         self.load_history()
         self.create_widgets()
 
