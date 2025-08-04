@@ -147,7 +147,7 @@ def get_file_info(file_path):
     try:
         full_path = get_full_path(file_path)
         
-        if not os.path.exists(full_path):
+        if not file_exists(full_path):
             return None
         
         stat_info = os.stat(full_path)
@@ -165,6 +165,8 @@ def get_file_info(file_path):
         return None
 
 def read_json_file(file_path, encoding='utf-8'):
+    if not file_exists(file_path):
+        return []
     try:
         with open(file_path, 'r', encoding=encoding) as f:
             return json.load(f)
@@ -175,6 +177,8 @@ def read_json_file(file_path, encoding='utf-8'):
         sys.exit(1)
 
 def read_text_file(file_path, encoding='utf-8'):
+    if not file_exists(file_path):
+        return ''
     try:
         with open(file_path, 'r', encoding=encoding) as f:
             return f.read()
@@ -183,6 +187,8 @@ def read_text_file(file_path, encoding='utf-8'):
         sys.exit(1)
 
 def save_json_file(data, file_path, encoding='utf-8'):
+    if not file_exists(os.path.dirname(file_path)):
+        create_directory_if_not_exists(os.path.dirname(file_path))
     try:
         with open(file_path, 'w', encoding=encoding) as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
