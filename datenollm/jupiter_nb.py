@@ -2,8 +2,9 @@ from datetime import datetime
 import json
 import os
 import shutil
-import pandas as pd
 
+import pandas as pd
+from IPython.display import display
 import ipywidgets as widgets
 
 from .file_utils import (
@@ -236,3 +237,225 @@ def copy_test_data(path=DRIVE_PATH):
             source_file = os.path.join(test_dir, file_name)
             if os.path.isfile(source_file):
                 shutil.copy(source_file, path)
+    
+
+class QuerySelector:
+    """
+    Class for creating interactive query checklist in Google Colab
+    """
+    
+    def __init__(self, queries_data, format_text_func=None, execute_func=None, action_buttons=None):
+        """
+        Initialize query selector
+        
+        Args:
+            queries_data: list of query dictionaries (usually response['queries'])
+            format_text_func: function for formatting checkbox text
+                             takes (idx, query) and returns checkbox_text
+            execute_func: function for executing selected queries (used for default button)
+                         takes list of selected query objects
+            action_buttons: list of action button configurations
+                           [{'name': 'button_name', 'func': function, 'style': 'style', 'description': 'tooltip'}]
+                           where function takes list of selected query objects
+        """
+        self.queries = queries_data
+        self.format_text_func = format_text_func or self._default_format_text
+        self.execute_func = execute_func or self._default_execute
+        self.action_buttons = action_buttons or []
+        self.checkboxes = []
+        self.action_button_widgets = []
+        self._create_interface()
+    
+    def _default_format_text(self, idx, query):
+        """
+        Default text formatting function
+        
+        Args:
+            idx: query index
+            query: query object
+            
+        Returns:
+            str: checkbox_text
+        """
+        question = query['query']
+        
+        if query.get('filters'):
+            qfilters = [f'{f["name"]}={f["value"]}' for f in query['filters']]
+            qfilters = ', '.join(qfilters)
+            checkbox_text = f'Query: {question} Filters: {qfilters}'
+        else:
+            checkbox_text = f'Query: {question}'
+            
+        return checkbox_text
+    
+    def _default_execute(self, selected_queries):
+        """
+        Default query execution function
+        
+        Args:
+            selected_queries: list of selected query objects
+        """
+        print(f"Executing search for {len(selected_queries)} queries:")
+        for i, query_data in enumerate(selected_queries, 1):
+            print(f"{i}. {query_data}")
+    
+    def _create_interface(self):
+        """Create user interface"""
+        # Create checkboxes
+        for idx, query in enumerate(self.queries):
+            checkbox_text = self.format_text_func(idx, query)
+            
+            checkbox = widgets.Checkbox(
+                value=False,
+                description=checkbox_text,
+                layout=widgets.Layout(
+                    width='auto',
+                    margin='2px 0px',
+                    min_width='300px'
+                ),
+                style={
+                    'description_width': 'initial'
+                }
+            )
+            
+            self.checkboxes.append((checkbox, query))
+        
+        # Create control buttons
+        self._create_control_buttons()
+        # Create action buttons
+        self._create_action_buttons()
+        
+        # Create main container
+        self._create_main_container()
+    
+    def _create_control_buttons(self):
+        """Create buttons for mass select/deselect"""
+        self.select_all_button = widgets.Button(
+            description="Select All",
+            button_style='info',
+            layout=widgets.Layout(width='120px', margin='2px')
+        )
+        self.select_all_button.on_click(self._select_all_click)
+        
+        self.deselect_all_button = widgets.Button(
+            description="Deselect All",
+            button_style='warning',
+            layout=widgets.Layout(width='120px', margin='2px')
+        )
+        self.deselect_all_button.on_click(self._deselect_all_click)
+    
+    def _create_action_buttons(self):
+        """Create action buttons"""
+        self.action_button_widgets = []
+        
+        # If custom buttons exist, create them
+        if self.action_buttons:
+            for button_config in self.action_buttons:
+                button = widgets.Button(
+                    description=button_config.get('name', 'Action'),
+                    button_style=button_config.get('style', 'primary'),
+                    tooltip=button_config.get('description', ''),
+                    layout=widgets.Layout(
+                        width='auto',
+                        margin='5px 2px'
+                    )
+                )
+                
+                # Create handler for each button
+                def make_action_handler(func):
+                    def on_action_click(b):
+                        selected_queries = self._get_selected_queries()
+                        if selected_queries:
+                            func(selected_queries)
+                        else:
+                            print("No queries selected!")
+                    return on_action_click
+                
+                button.on_click(make_action_handler(button_config['func']))
+                self.action_button_widgets.append(button)
+        
+        # If no custom buttons, create default button
+        else:
+            default_button = widgets.Button(
+                description="Execute Selected Queries",
+                button_style='success',
+                layout=widgets.Layout(
+                    width='auto',
+                    margin='10px 0px'
+                )
+            )
+            default_button.on_click(self._on_execute_click)
+            self.action_button_widgets.append(default_button)
+    
+    def _get_selected_queries(self):
+        """Get list of selected queries (internal method)"""
+        selected_queries = []
+        for checkbox, query in self.checkboxes:
+            if checkbox.value:
+                selected_queries.append(query)
+        return selected_queries
+    
+    def _create_main_container(self):
+        """Create main interface container"""
+        # Control buttons container
+        control_buttons = widgets.HBox([self.select_all_button, self.deselect_all_button])
+        
+        # Checkbox container
+        checkbox_container = widgets.VBox([checkbox for checkbox, _ in self.checkboxes])
+        
+        # Action buttons container
+        if len(self.action_button_widgets) > 1:
+            # If multiple buttons, place them horizontally
+            action_buttons_container = widgets.HBox(self.action_button_widgets)
+        else:
+            # If single button, place vertically
+            action_buttons_container = widgets.VBox(self.action_button_widgets)
+        
+        # Main container
+        self.main_container = widgets.VBox([
+            control_buttons,
+            checkbox_container,
+            action_buttons_container
+        ])
+    
+    def _select_all_click(self, b):
+        """Handler for 'Select All' button"""
+        for checkbox, _ in self.checkboxes:
+            checkbox.value = True
+    
+    def _deselect_all_click(self, b):
+        """Handler for 'Deselect All' button"""
+        for checkbox, _ in self.checkboxes:
+            checkbox.value = False
+    
+    def _on_execute_click(self, b):
+        """Handler for default execute button"""
+        selected_queries = self._get_selected_queries()
+        
+        if selected_queries:
+            self.execute_func(selected_queries)
+        else:
+            print("No queries selected!")
+    
+    def display(self):
+        """Display interface"""
+        display(self.main_container)
+    
+    def get_selected_queries(self):
+        """
+        Get list of selected queries
+        
+        Returns:
+            list: list of selected query objects
+        """
+        return self._get_selected_queries()
+    
+    def set_selected(self, indices):
+        """
+        Programmatically set selected queries by indices
+        
+        Args:
+            indices: list of query indices to select
+        """
+        for i, (checkbox, _) in enumerate(self.checkboxes):
+            checkbox.value = i in indices
