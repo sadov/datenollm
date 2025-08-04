@@ -1,19 +1,19 @@
 from datetime import datetime
 import json
-
+import os
+import shutil
 import pandas as pd
 
 import ipywidgets as widgets
 
 from .file_utils import (
+    DRIVE_PATH,
     mount_drive_if_needed,
     get_full_path,
     file_exists,
     read_json_file,
     save_json_file
 )
-
-DRIVE_PATH = '/content/drive/MyDrive'
 
 def ask_llm(client, query, context_file=None, history_file=None, params=None):
   if not query:
@@ -207,12 +207,12 @@ def dateno2df(results):
 
     return display_df
 
-def display_left_aligned_table(df):
-    html_table = df.to_html(escape=False, table_id='nb-table')
+def display_table(df, table_id='nb-table'):
+    html_table = df.to_html(escape=False, table_id=table_id)
 
     styled_html = f"""
     <style>
-    #nb-table td, #nb-table th {{
+    #{table_id} td, #{table_id} th {{
         text-align: left !important;
         vertical-align: top;
         padding: 8px;
@@ -222,3 +222,14 @@ def display_left_aligned_table(df):
     """
 
     return widgets.HTML(styled_html)
+
+def copy_test_data(path=DRIVE_PATH):
+    os.makedirs(path, exist_ok=True)
+    # Получаем путь к текущему файлу и находим папку test в пакете datenollm
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    test_dir = os.path.join(current_dir, 'test')
+    if os.path.exists(test_dir):
+        for file_name in os.listdir(test_dir):
+            source_file = os.path.join(test_dir, file_name)
+            if os.path.isfile(source_file):
+                shutil.copy(source_file, path)

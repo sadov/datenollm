@@ -8,3 +8,5 @@ typer
 tabulate
 flatdict
 requests
+# Jupiter NB
+ipywidgets

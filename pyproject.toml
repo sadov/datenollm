@@ -24,10 +24,14 @@ dateno-get-logs = "datenollm.cli.logs:main"
 dateno-like = "datenollm.cli.like:main"
 dateno-flagged-log = "datenollm.cli.flagged_log:main"
 
-[project.urls]
-"Homepage" = "https://github.com/pypa/sampleproject"
-"Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
-
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["datenollm*"]
+
+[tool.setuptools.package-data]
+datenollm = ["test/**"]
+
