@@ -5,7 +5,8 @@ import dateno.core
 DATENO_API_KEY = os.getenv('DATENO_API_KEY')
 
 # Dateno search machinery
-def dateno_index_search(query, filters, offset=0, page=1, limit=500):
+def dateno_index_search(query, filters, apikey=DATENO_API_KEY,
+  offset=0, page=1, limit=500):
     "Call Dateno API for search in index"
     logging.debug(f'index_search {query=} {filters=}')
 
@@ -20,7 +21,7 @@ def dateno_index_search(query, filters, offset=0, page=1, limit=500):
                              )
     return results
 
-def llm_index_search(llm_response):
+def llm_index_search(llm_response, apikey=DATENO_API_KEY, offset=0, page=1, limit=500):
     queries = []
     for query in llm_response['queries']:
       if query['filters']:
@@ -28,8 +29,9 @@ def llm_index_search(llm_response):
       else:
         qfilters = []
       logging.debug(f'{query=} {qfilters=}')
-      results = dateno_index_search(query['query'], qfilters)#, offset, page, limit)
+      results = dateno_index_search(query['query'], qfilters, apikey=apikey, offset=offset, page=page, limit=limit)
       queries.append({'query': query,
                       'results': results})
 
     return queries
+
