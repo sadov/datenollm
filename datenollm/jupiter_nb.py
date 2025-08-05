@@ -203,7 +203,8 @@ def dateno2df(results):
             '_id': result['_id'],
             'title': result['_source']['dataset']['title'],
             'description': result['_source']['dataset'].get('description', ''),
-            'datasets': f'<a href="https://dateno.io/search/#{result["_id"]}">{result["_source"]["dataset"]["title"]}</a><br>'
+            'datasets': 
+            f'<a href="https://dateno.io/search/#{result["_id"]}" target="_blank" rel="noopener noreferrer">{result["_source"]["dataset"]["title"]}</a><br>'
         })
 
     df = pd.DataFrame(df_data)
