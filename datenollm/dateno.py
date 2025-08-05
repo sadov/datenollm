@@ -9,7 +9,7 @@ def dateno_index_search(query, filters, apikey=DATENO_API_KEY,
   offset=0, page=1, limit=500):
     "Call Dateno API for search in index"
     logging.debug(f'index_search {query=} {filters=}')
-
+    print(f'{apikey=}')    
     cmd=dateno.core.DatenoCmd(debug=True,
                               apikey=DATENO_API_KEY)
 
@@ -34,4 +34,5 @@ def llm_index_search(llm_response, apikey=DATENO_API_KEY, offset=0, page=1, limi
                       'results': results})
 
     return queries
+
 
