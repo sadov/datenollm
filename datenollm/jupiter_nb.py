@@ -366,9 +366,19 @@ class QuerySelector:
                     def on_action_click(b):
                         selected_queries = self._get_selected_queries()
                         if selected_queries:
-                            func(selected_queries)
+                            result = func(selected_queries)
+                            # Store the result with button name as key
+                            if not hasattr(self, 'action_results'):
+                                self.action_results = {}
+                            self.action_results[button_config.get('name', 'Action')] = result
+                            return result
                         else:
                             print("No queries selected!")
+                            # Clear action results when no queries selected
+                            button_name = button_config.get('name', 'Action')
+                            if hasattr(self, 'action_results') and button_name in self.action_results:
+                                del self.action_results[button_name]
+                            return None
                     return on_action_click
                 
                 button.on_click(make_action_handler(button_config['func']))
@@ -433,13 +443,75 @@ class QuerySelector:
         selected_queries = self._get_selected_queries()
         
         if selected_queries:
-            self.execute_func(selected_queries)
+            result = self.execute_func(selected_queries)
+            # Store the result for later access
+            self.last_result = result
+            return result
         else:
             print("No queries selected!")
+            # Clear last result when no queries selected
+            if hasattr(self, 'last_result'):
+                delattr(self, 'last_result')
+            return None
     
     def display(self):
         """Display interface"""
         display(self.main_container)
+    
+    def get_last_result(self):
+        """
+        Get result of last executed function
+        
+        Returns:
+            Result of the last executed function or None
+        """
+        return getattr(self, 'last_result', None)
+    
+    def get_action_results(self):
+        """
+        Get results of all action button executions
+        
+        Returns:
+            dict: Dictionary with button names as keys and results as values
+        """
+        return getattr(self, 'action_results', {})
+    
+    def execute_queries_directly(self, query_indices=None):
+        """
+        Execute queries directly without button click
+        
+        Args:
+            query_indices: list of indices to execute, if None - execute selected
+            
+        Returns:
+            Result of execute_func
+        """
+        if query_indices is not None:
+            # Execute specific queries by indices
+            selected_queries = [self.queries[i] for i in query_indices if i < len(self.queries)]
+        else:
+            # Execute currently selected queries
+            selected_queries = self._get_selected_queries()
+        
+        if selected_queries:
+            result = self.execute_func(selected_queries)
+            self.last_result = result
+            return result
+        else:
+            print("No queries to execute!")
+            # Clear last result when no queries to execute
+            if hasattr(self, 'last_result'):
+                delattr(self, 'last_result')
+            return None
+    
+    def clear_results(self):
+        """
+        Clear all stored results
+        """
+        if hasattr(self, 'last_result'):
+            delattr(self, 'last_result')
+        if hasattr(self, 'action_results'):
+            delattr(self, 'action_results')
     
     def get_selected_queries(self):
         """
@@ -459,3 +531,5 @@ class QuerySelector:
         """
         for i, (checkbox, _) in enumerate(self.checkboxes):
             checkbox.value = i in indices
+
+
