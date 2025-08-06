@@ -565,6 +565,6 @@ class DatenoSearchQuerySelector(QuerySelector):
         for i, query_data in enumerate(selected_queries, 1):
             print(f"  {i}. Searching: {query_data['query']}")
         request = json.dumps({'queries': selected_queries})
-        result = self.client.predict(llm_response=request, api_name="/dateno_search")
+        result = self.client.client.predict(llm_response=request, api_name="/dateno_search")
 
         return result
