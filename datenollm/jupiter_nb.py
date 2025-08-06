@@ -279,13 +279,7 @@ class QuerySelector:
             str: checkbox_text
         """
         question = query['query']
-        
-        if query.get('filters'):
-            qfilters = [f'{f["name"]}={f["value"]}' for f in query['filters']]
-            qfilters = ', '.join(qfilters)
-            checkbox_text = f'Query: {question} Filters: {qfilters}'
-        else:
-            checkbox_text = f'Query: {question}'
+        checkbox_text = f'{idx}. {question}'
             
         return checkbox_text
     
@@ -534,3 +528,38 @@ class QuerySelector:
             checkbox.value = i in indices
 
 
+class DatenoSearchQuerySelector(QuerySelector):
+    def __init__(self, client, queries_data, format_text_func=None, execute_func=None, action_buttons=None):
+        self.client = client
+        super().__init__(queries_data, format_text_func, execute_func, action_buttons)
+
+    def _default_format_text(self, idx, query):
+        """
+        Default text formatting function
+        
+        Args:
+            idx: query index
+            query: query object
+        
+        Returns:
+            str: checkbox_text
+        """
+        question = query['query']
+        
+        if query.get('filters'):
+            qfilters = [f'{f["name"]}={f["value"]}' for f in query['filters']]
+            qfilters = ', '.join(qfilters)
+            checkbox_text = f'{idx}. <b>Query:</b> {question} | <b>Filters:</b> {qfilters}'
+        else:
+            checkbox_text = f'{idx}. <b>Query:</b> {question}'
+            
+        return checkbox_text
+        
+    def _default_execute(self, client, selected_queries):
+        print(f"🔍 Starting search for {len(selected_queries)} queries:")
+        for i, query_data in enumerate(selected_queries, 1):
+            print(f"  {i}. Searching: {query_data['query']}")
+        request = json.dumps({'queries': selected_queries})
+        result = self.client.predict(llm_response=request, api_name="/dateno_search")
+
+        return result
