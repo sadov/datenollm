@@ -554,8 +554,13 @@ class DatenoSearchQuerySelector(QuerySelector):
             checkbox_text = f'{idx}. <b>Query:</b> {question}'
             
         return checkbox_text
+    def _default_execute(self, selected_queries):
+        """
+        Default query execution function
         
-    def _default_execute(self, client, selected_queries):
+        Args:
+            selected_queries: list of selected query objects
+        """
         print(f"🔍 Starting search for {len(selected_queries)} queries:")
         for i, query_data in enumerate(selected_queries, 1):
             print(f"  {i}. Searching: {query_data['query']}")
