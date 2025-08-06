@@ -39,7 +39,8 @@ except KeyError:
 try:
     default_max_tokens = int(os.environ['OPENAI_API_MAX_TOKENS'])
 except:
-    default_max_tokens = 512
+    #default_max_tokens = 512
+    default_max_tokens = 2048
 try:
     default_temperature = float(os.environ['OPENAI_API_TEMPERATURE'])
 except:
@@ -144,7 +145,8 @@ class Server:
             except Exception as e:
                 logger.error(f"Validation error: {e}")
                 logger.error(f"Cleaned response: {response}")
-                return None
+                response = {"question": "There seems to be something wrong with request processing. An invalid result was received. Try increasing 'Max new tokens' (max_tokens) parameter. If that doesn't help, contact support.", "queries": []}
+                return json.dumps(response)
         
         return response
 
