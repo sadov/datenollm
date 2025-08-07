@@ -173,11 +173,7 @@ class ChatWidget:
                 queries=json.loads(item['content'])
                 for query in queries['queries']:
                     out += '<div style="margin:0.2em 0 0.7em 1.5em;">'
-                    out += f"<strong>Dateno query:</strong> <em>{query['query']}</em> "
-                    if query['filters']:
-                        out += '&nbsp;&nbsp;&nbsp;&nbsp;<strong>Filters:</strong>'
-                        for f in query['filters']:
-                            out += f"&nbsp;&nbsp;{f['name']}={f['value']}"
+                    out += f"<strong>Query:</strong> <em>{query}</em> "
                     out += "</div>"
         return out
 
@@ -195,6 +191,80 @@ class ChatWidget:
     def display(self):
         buttons = widgets.HBox([self.like_btn, self.dislike_btn, self.none_btn])
         return widgets.VBox([self.result_label, buttons])
+
+class DatenoSearchChatWidget(ChatWidget):
+    def __init__(self, client, history_file=None):
+        self.client = client
+        super().__init__(history_file)
+
+    def _history2html(self, history=None):
+        if not history:
+            history = self.history
+        out = ''
+        idx = 1
+        num = ''
+        for item in history:
+            icon = ''
+            if item['role'] == 'user':
+                question = item['content']
+                num = f'{idx}. '
+                idx += 1
+            elif item['role'] == 'assistant':
+                metadata = item['metadata']
+                if metadata and metadata.get('like_dislike'):
+                    if metadata['like_dislike'] == 'Like':
+                        icon = "👍 "
+                    elif metadata['like_dislike'] == 'Dislike':
+                        icon = "👎 "
+                    else:
+                        icon = ''
+                out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
+                queries=json.loads(item['content'])
+                for query in queries['queries']:
+                    out += '<div style="margin:0.2em 0 0.7em 1.5em;">'
+                    out += f"<strong>Dateno query:</strong> <em>{query['query']}</em> "
+                    if query['filters']:
+                        out += '&nbsp;&nbsp;&nbsp;&nbsp;<strong>Filters:</strong>'
+                        for f in query['filters']:
+                            out += f"&nbsp;&nbsp;{f['name']}={f['value']}"
+                    out += "</div>"
+        return out
+
+class QueryAssistantChatWidget(ChatWidget):
+    def __init__(self, client, history_file=None):
+        self.client = client
+        super().__init__(history_file)
+
+    def _history2html(self, history=None):
+        if not history:
+            history = self.history
+        out = ''
+        idx = 1
+        num = ''
+        for item in history:
+            icon = ''
+            if item['role'] == 'user':
+                question = item['content']
+                num = f'{idx}. '
+                idx += 1
+            elif item['role'] == 'assistant':
+                metadata = item['metadata']
+                if metadata and metadata.get('like_dislike'):
+                    if metadata['like_dislike'] == 'Like':
+                        icon = "👍 "
+                    elif metadata['like_dislike'] == 'Dislike':
+                        icon = "👎 "
+                    else:
+                        icon = ''
+                out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
+                queries=json.loads(item['content'])
+                for query in queries['queries']:
+                    out += '<div style="margin:0.2em 0 0.7em 1.5em;">'
+                    out += f"<strong>Dateno query:</strong> <em>{query['query']}</em> "
+                    if query['explanation']:
+                        out += f"&nbsp;&nbsp;&nbsp;&nbsp;<strong>Explanation:</strong> {query['explanation']}"
+                    out += "</div>"
+        return out
 
 def dateno2df(results):
     df_data = []
