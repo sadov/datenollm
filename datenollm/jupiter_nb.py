@@ -275,9 +275,8 @@ class QueryAssistantChatWidget(ChatWidget):
 
 def dateno2df(results):
     df_data = []
-    for i, result in enumerate(results, 1):  # Начинаем с 1
+    for result in results:
         df_data.append({
-            'number': i,
             '_id': result['_id'],
             'title': result['_source']['dataset']['title'],
             'description': result['_source']['dataset'].get('description', ''),
@@ -286,7 +285,7 @@ def dateno2df(results):
         })
 
     df = pd.DataFrame(df_data)
-    display_df = df[['number', 'datasets']]
+    display_df = df[['datasets']]
 
     return display_df
 
@@ -826,11 +825,12 @@ class DatenoSearchQuerySelector(QuerySelector):
         if query.get('filters'):
             qfilters = [f'{f["name"]}={f["value"]}' for f in query['filters']]
             qfilters = ', '.join(qfilters)
-            checkbox_text = f'{idx}. Query: {question} | Filters: {qfilters}'
+            radiobox_text = f'{idx}. <strong>Query:</strong> {question} | <strong>Filters:</strong> {qfilters}'
         else:
-            checkbox_text = f'{idx}. Query: {question}'
+            radiobox_text = f'{idx}. <strong>Query:</strong> {question}'
             
-        return checkbox_text
+        return radiobox_text
+
     def _default_execute(self, selected_queries):
         """
         Default query execution function
