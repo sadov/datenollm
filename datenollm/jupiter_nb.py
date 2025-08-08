@@ -306,126 +306,161 @@ def display_table(df, table_id='nb-table'):
     return widgets.HTML(styled_html)
 
 
-def display_table_with_pagination(df, table_id='nb-table', page_size=10):
+class PaginatedTableWidget:
     """
-    Отображает таблицу с пагинацией
+    Виджет для отображения таблицы с пагинацией
+    """
+    
+    def __init__(self, df, page_size=10):
+        """
+        Инициализация виджета
+        
+        Args:
+            df: DataFrame для отображения
+            page_size: количество строк на страницу
+        """
+        self.df = df
+        self.page_size = page_size
+        self.current_page = 1
+        self.total_rows = len(df)
+        self.total_pages = (self.total_rows + page_size - 1) // page_size
+        
+        self._create_widgets()
+        self._update_display()
+    
+    def _create_widgets(self):
+        """Создание виджетов управления"""
+        # Кнопки навигации
+        self.prev_button = widgets.Button(
+            description='← Предыдущая',
+            disabled=True,
+            layout=widgets.Layout(width='120px')
+        )
+        self.prev_button.on_click(self._prev_page)
+        
+        self.next_button = widgets.Button(
+            description='Следующая →',
+            disabled=self.total_pages <= 1,
+            layout=widgets.Layout(width='120px')
+        )
+        self.next_button.on_click(self._next_page)
+        
+        # Информация о страницах
+        self.page_info = widgets.HTML()
+        
+        # Выбор размера страницы
+        self.page_size_dropdown = widgets.Dropdown(
+            options=[5, 10, 25, 50, 100],
+            value=self.page_size,
+            description='Строк на страницу:',
+            layout=widgets.Layout(width='200px')
+        )
+        self.page_size_dropdown.observe(self._on_page_size_change, names='value')
+        
+        # Таблица
+        self.table_widget = widgets.HTML()
+        
+        # Контейнер для элементов управления
+        self.controls = widgets.HBox([
+            self.prev_button,
+            self.page_info,
+            self.next_button,
+            widgets.HTML('<div style="margin-left: auto;"></div>'),
+            self.page_size_dropdown
+        ])
+        
+        # Основной контейнер
+        self.container = widgets.VBox([
+            self.controls,
+            self.table_widget
+        ])
+    
+    def _update_display(self):
+        """Обновление отображения"""
+        if self.df.empty:
+            self.table_widget.value = "<p>Нет данных для отображения</p>"
+            self.page_info.value = ""
+            return
+        
+        # Вычисляем индексы для текущей страницы
+        start_idx = (self.current_page - 1) * self.page_size
+        end_idx = min(start_idx + self.page_size, self.total_rows)
+        
+        # Получаем данные для текущей страницы
+        page_df = self.df.iloc[start_idx:end_idx]
+        
+        # Обновляем информацию о страницах
+        self.page_info.value = f"Страница {self.current_page} из {self.total_pages} (всего записей: {self.total_rows})"
+        
+        # Обновляем состояние кнопок
+        self.prev_button.disabled = self.current_page <= 1
+        self.next_button.disabled = self.current_page >= self.total_pages
+        
+        # Отображаем таблицу
+        html_table = page_df.to_html(escape=False, table_id='paginated-table')
+        styled_html = f"""
+        <style>
+        #paginated-table {{
+            width: 100%;
+            border-collapse: collapse;
+        }}
+        #paginated-table td, #paginated-table th {{
+            text-align: left !important;
+            vertical-align: top;
+            padding: 8px;
+            border: 1px solid #ddd;
+        }}
+        #paginated-table th {{
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }}
+        #paginated-table tr:nth-child(even) {{
+            background-color: #f9f9f9;
+        }}
+        #paginated-table tr:hover {{
+            background-color: #f5f5f5;
+        }}
+        </style>
+        {html_table}
+        """
+        self.table_widget.value = styled_html
+    
+    def _prev_page(self, b):
+        """Переход на предыдущую страницу"""
+        if self.current_page > 1:
+            self.current_page -= 1
+            self._update_display()
+    
+    def _next_page(self, b):
+        """Переход на следующую страницу"""
+        if self.current_page < self.total_pages:
+            self.current_page += 1
+            self._update_display()
+    
+    def _on_page_size_change(self, change):
+        """Изменение размера страницы"""
+        self.page_size = change['new']
+        self.total_pages = (self.total_rows + self.page_size - 1) // self.page_size
+        self.current_page = 1  # Возвращаемся на первую страницу
+        self._update_display()
+    
+    def display(self):
+        """Отображение виджета"""
+        return self.container
+
+
+def display_table_with_pagination(df, page_size=10):
+    """
+    Функция-обертка для создания виджета с пагинацией
     
     Args:
         df: DataFrame для отображения
-        table_id: ID таблицы
         page_size: количество строк на страницу
         
     Returns:
-        widgets.HTML: виджет с таблицей и элементами управления
+        PaginatedTableWidget: виджет с таблицей и пагинацией
     """
-    if df.empty:
-        return widgets.HTML("<p>Нет данных для отображения</p>")
-    
-    total_rows = len(df)
-    total_pages = (total_rows + page_size - 1) // page_size
-    
-    # JavaScript для пагинации
-    pagination_js = f"""
-    <script>
-    let currentPage = 1;
-    const pageSize = {page_size};
-    const totalRows = {total_rows};
-    const totalPages = {total_pages};
-    
-    function showPage(page) {{
-        const table = document.getElementById('{table_id}');
-        const rows = table.getElementsByTagName('tr');
-        const startRow = (page - 1) * pageSize + 1; // +1 для заголовка
-        const endRow = Math.min(startRow + pageSize, rows.length);
-        
-        // Скрываем все строки
-        for (let i = 1; i < rows.length; i++) {{
-            rows[i].style.display = 'none';
-        }}
-        
-        // Показываем строки текущей страницы
-        for (let i = startRow; i < endRow; i++) {{
-            rows[i].style.display = '';
-        }}
-        
-        // Обновляем информацию о страницах
-        document.getElementById('page-info').textContent = 
-            `Страница ${{page}} из ${{totalPages}} (всего записей: ${{totalRows}})`;
-        
-        // Обновляем состояние кнопок
-        document.getElementById('prev-btn').disabled = page <= 1;
-        document.getElementById('next-btn').disabled = page >= totalPages;
-        
-        currentPage = page;
-    }}
-    
-    function changePageSize() {{
-        const newSize = parseInt(document.getElementById('page-size').value);
-        location.reload(); // Перезагружаем с новым размером страницы
-    }}
-    
-    // Инициализация
-    window.onload = function() {{
-        showPage(1);
-    }};
-    </script>
-    """
-    
-    # HTML для элементов управления
-    controls_html = f"""
-    <div style="margin: 10px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <button id="prev-btn" onclick="showPage(currentPage - 1)" style="padding: 5px 10px;">← Предыдущая</button>
-            <span id="page-info">Страница 1 из {total_pages}</span>
-            <button id="next-btn" onclick="showPage(currentPage + 1)" style="padding: 5px 10px;">Следующая →</button>
-            
-            <div style="margin-left: auto;">
-                <label for="page-size">Строк на страницу:</label>
-                <select id="page-size" onchange="changePageSize()" style="margin-left: 5px;">
-                    <option value="5" {'selected' if page_size == 5 else ''}>5</option>
-                    <option value="10" {'selected' if page_size == 10 else ''}>10</option>
-                    <option value="25" {'selected' if page_size == 25 else ''}>25</option>
-                    <option value="50" {'selected' if page_size == 50 else ''}>50</option>
-                    <option value="100" {'selected' if page_size == 100 else ''}>100</option>
-                </select>
-            </div>
-        </div>
-    </div>
-    """
-    
-    # Создаем таблицу
-    html_table = df.to_html(escape=False, table_id=table_id)
-    
-    # Объединяем все элементы
-    styled_html = f"""
-    <style>
-    #{table_id} {{
-        width: 100%;
-        border-collapse: collapse;
-    }}
-    #{table_id} td, #{table_id} th {{
-        text-align: left !important;
-        vertical-align: top;
-        padding: 8px;
-        border: 1px solid #ddd;
-    }}
-    #{table_id} th {{
-        background-color: #f2f2f2;
-        font-weight: bold;
-    }}
-    #{table_id} tr:nth-child(even) {{
-        background-color: #f9f9f9;
-    }}
-    #{table_id} tr:hover {{
-        background-color: #f5f5f5;
-    }}
-    </style>
-    {controls_html}
-    {html_table}
-    {pagination_js}
-    """
-    
-    return widgets.HTML(styled_html)
+    return PaginatedTableWidget(df, page_size)
 
 def copy_test_data(path=DRIVE_PATH):
     os.makedirs(path, exist_ok=True)
@@ -542,25 +577,26 @@ class QuerySelector:
     
     def _create_interface(self):
         """Create user interface"""
-        # Create radio buttons for single selection
-        self.radio_buttons = []
+        # Create options for radio buttons
+        options = []
         for idx, query in enumerate(self.queries):
-            radio_text = self.format_text_func(idx, query)
-            
-            radio = widgets.RadioButtons(
-                options=[(radio_text, idx)],
-                value=None,
-                layout=widgets.Layout(
-                    width='auto',
-                    margin='2px 0px',
-                    min_width='300px'
-                ),
-                style={
-                    'description_width': 'initial'
-                }
-            )
-            
-            self.radio_buttons.append((radio, query))
+            option_text = self.format_text_func(idx, query)
+            options.append((option_text, idx))
+        
+        # Create single RadioButtons widget
+        self.radio_buttons = widgets.RadioButtons(
+            options=options,
+            value=None,
+            description='Выберите запрос:',
+            layout=widgets.Layout(
+                width='auto',
+                margin='10px 0px',
+                min_width='400px'
+            ),
+            style={
+                'description_width': 'initial'
+            }
+        )
         
         # Create control buttons
         self._create_control_buttons()
@@ -635,18 +671,16 @@ class QuerySelector:
     def _get_selected_queries(self):
         """Get list of selected queries (internal method)"""
         selected_queries = []
-        for radio, query in self.radio_buttons:
-            if radio.value is not None:
-                selected_queries.append(query)
+        if self.radio_buttons.value is not None:
+            selected_idx = self.radio_buttons.value
+            if 0 <= selected_idx < len(self.queries):
+                selected_queries.append(self.queries[selected_idx])
         return selected_queries
     
     def _create_main_container(self):
         """Create main interface container"""
         # Control buttons container
         control_buttons = widgets.HBox([self.clear_selection_button])
-        
-        # Radio buttons container
-        radio_container = widgets.VBox([radio for radio, _ in self.radio_buttons])
         
         # Action buttons container
         if len(self.action_button_widgets) > 1:
@@ -659,14 +693,13 @@ class QuerySelector:
         # Main container
         self.main_container = widgets.VBox([
             control_buttons,
-            radio_container,
+            self.radio_buttons,
             action_buttons_container
         ])
     
     def _clear_selection_click(self, b):
         """Handler for 'Clear Selection' button"""
-        for radio, _ in self.radio_buttons:
-            radio.value = None
+        self.radio_buttons.value = None
     
     def _on_execute_click(self, b):
         """Handler for default execute button"""
@@ -759,8 +792,8 @@ class QuerySelector:
         Args:
             index: query index to select
         """
-        if 0 <= index < len(self.radio_buttons):
-            self.radio_buttons[index][0].value = index
+        if 0 <= index < len(self.queries):
+            self.radio_buttons.value = index
 
 
 class DatenoSearchQuerySelector(QuerySelector):
@@ -850,7 +883,9 @@ class DatenoSearchQuerySelector(QuerySelector):
         
         if not df.empty:
             print(f"   Найдено записей: {len(df)}")
-            display(display_table_with_pagination(df, table_id='query-results-table'))
+            # Создаем виджет с пагинацией и отображаем его
+            table_widget = display_table_with_pagination(df)
+            display(table_widget.display())
         else:
             print("   ❌ Результаты не найдены")
         print("-" * 30)
