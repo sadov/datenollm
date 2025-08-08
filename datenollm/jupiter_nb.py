@@ -883,7 +883,11 @@ class DatenoSearchQuerySelector(QuerySelector):
         query = selected_queries[0]
         df = display_dfs[0]
 
-        print(f"\n📊 Search Results for query: {query['query']}")
+        if query.get('filters'):
+            filters_str = ', '.join([f"{f['name']}={f['value']}" for f in query['filters']])
+            print(f"\n📊 Search Results for query: \"{query['query']}\" with filters: {filters_str}")
+        else:
+            print(f"\n📊 Search Results for query: \"{query['query']}\"")
         print("=" * 50)
         
         if query.get('filters'):
