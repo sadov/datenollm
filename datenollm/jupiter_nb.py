@@ -818,16 +818,16 @@ class DatenoSearchQuerySelector(QuerySelector):
             query: query object
         
         Returns:
-            str: checkbox_text
+            str: radiobox_text
         """
         question = query['query']
         
         if query.get('filters'):
             qfilters = [f'{f["name"]}={f["value"]}' for f in query['filters']]
             qfilters = ', '.join(qfilters)
-            radiobox_text = f'{idx}. <strong>Query:</strong> {question} | <strong>Filters:</strong> {qfilters}'
+            radiobox_text = f'{idx}. Query: {question} | Filters: {qfilters}'
         else:
-            radiobox_text = f'{idx}. <strong>Query:</strong> {question}'
+            radiobox_text = f'{idx}. Query: {question}'
             
         return radiobox_text
 
