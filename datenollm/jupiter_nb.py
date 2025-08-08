@@ -151,7 +151,7 @@ class ChatWidget:
     def _history2html(self, history=None):
         if not history:
             history = self.history
-        out = ''
+        out = '==============================================='
         idx = 1
         num = ''
         for item in history:
@@ -243,7 +243,7 @@ class QueryAssistantChatWidget(ChatWidget):
     def _history2html(self, history=None):
         if not history:
             history = self.history
-        out = ''
+        out = '==============================================='
         idx = 1
         num = ''
         for item in history:
@@ -595,7 +595,7 @@ class QuerySelector:
         self.radio_buttons = widgets.RadioButtons(
             options=options,
             value=None,
-            description='Select query:',
+            description='===============================================\nSelect query:',
             layout=widgets.Layout(
                 width='auto',
                 margin='10px 0px',
@@ -881,14 +881,9 @@ class DatenoSearchQuerySelector(QuerySelector):
             
         query = selected_queries[0]
         df = display_dfs[0]
-        print('===============================================')
-        print(f"Query: {query['query']}")
-        print('===============================================')
 
-
-        print(f"\n📊 Search Results:")
+        print(f"\n📊 Search Results for query: {query['query']}")
         print("=" * 50)
-        print(f"\n🔍 Query: {query['query']}")
         
         if query.get('filters'):
             filters_str = ', '.join([f"{f['name']}={f['value']}" for f in query['filters']])
