@@ -171,10 +171,13 @@ class ChatWidget:
                         icon = ''
                 out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
                 queries=json.loads(item['content'])
+                subnum = 1
                 for query in queries['queries']:
                     out += '<div style="margin:0.2em 0 0.7em 1.5em;">'
-                    out += f"<strong>Query:</strong> <em>{query}</em> "
+                    out += f"<strong>{num}.{subnum}. Query:</strong> <em>{query}</em> "
+                    subnum += 1
                     out += "</div>"
+                    subnum += 1
         return out
 
     def last_history_out(self):
@@ -220,14 +223,16 @@ class DatenoSearchChatWidget(ChatWidget):
                         icon = ''
                 out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
                 queries=json.loads(item['content'])
+                subnum = 1
                 for query in queries['queries']:
                     out += '<div style="margin:0.2em 0 0.7em 1.5em;">'
-                    out += f"<strong>Dateno query:</strong> <em>{query['query']}</em> "
+                    out += f"<strong>{num}.{subnum}. Dateno query:</strong> <em>{query['query']}</em> "
                     if query['filters']:
                         out += '&nbsp;&nbsp;&nbsp;&nbsp;<strong>Filters:</strong>'
                         for f in query['filters']:
                             out += f"&nbsp;&nbsp;{f['name']}={f['value']}"
                     out += "</div>"
+                    subnum += 1
         return out
 
 class QueryAssistantChatWidget(ChatWidget):
@@ -258,12 +263,14 @@ class QueryAssistantChatWidget(ChatWidget):
                         icon = ''
                 out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
                 queries=json.loads(item['content'])
+                subnum = 1
                 for query in queries['queries']:
                     out += '<div style="margin:0.2em 0 0.7em 1.5em;">'
-                    out += f"<strong>Dateno query:</strong> <em>{query['query']}</em> "
+                    out += f"<strong>{num}.{subnum}. Dateno query:</strong> <em>{query['query']}</em> "
                     if query['explanation']:
                         out += f"&nbsp;&nbsp;&nbsp;&nbsp;<strong>Explanation:</strong> {query['explanation']}"
                     out += "</div>"
+                    subnum += 1
         return out
 
 def dateno2df(results):
@@ -308,6 +315,20 @@ def copy_test_data(path=DRIVE_PATH):
             source_file = os.path.join(test_dir, file_name)
             if os.path.isfile(source_file):
                 shutil.copy(source_file, path)
+
+
+def create_dateno_search_selector(client, queries_data):
+    """
+    Создает QuerySelector для поиска в Dateno с автоматическим отображением результатов
+    
+    Args:
+        client: DatenoClient instance
+        queries_data: список запросов для выбора
+        
+    Returns:
+        DatenoSearchQuerySelector: настроенный селектор
+    """
+    return DatenoSearchQuerySelector(client, queries_data)
     
 
 class QuerySelector:
@@ -637,4 +658,63 @@ class DatenoSearchQuerySelector(QuerySelector):
         request = json.dumps({'queries': selected_queries})
         result = self.client.client.predict(llm_response=request, api_name="/dateno_search")
 
+        # Обрабатываем результаты и создаем dataframes
+        display_dfs = []
+        for query_result in result:
+            hits = query_result['results']['hits']['hits']
+            if hits:
+                df = dateno2df(hits)
+                display_dfs.append(df)
+            else:
+                display_dfs.append(pd.DataFrame())  # Пустой DataFrame если нет результатов
+        
+        # Сохраняем результаты для доступа
+        self.display_dfs = display_dfs
+        self.query_results = result
+        
+        # Отображаем результаты
+        self._display_results(selected_queries, display_dfs)
+        
         return result
+    
+    def _display_results(self, selected_queries, display_dfs):
+        """
+        Отображает результаты поиска в виде таблиц
+        
+        Args:
+            selected_queries: список выбранных запросов
+            display_dfs: список DataFrame с результатами
+        """
+        print(f"\n📊 Результаты поиска:")
+        print("=" * 50)
+        
+        for i, (query, df) in enumerate(zip(selected_queries, display_dfs)):
+            print(f"\n🔍 Запрос {i+1}: {query['query']}")
+            if query.get('filters'):
+                filters_str = ', '.join([f"{f['name']}={f['value']}" for f in query['filters']])
+                print(f"   Фильтры: {filters_str}")
+            
+            if not df.empty:
+                print(f"   Найдено записей: {len(df)}")
+                display(display_table(df, table_id=f'query-{i+1}-table'))
+            else:
+                print("   ❌ Результаты не найдены")
+            print("-" * 30)
+    
+    def get_display_dfs(self):
+        """
+        Получить список DataFrame с результатами
+        
+        Returns:
+            list: список DataFrame с результатами поиска
+        """
+        return getattr(self, 'display_dfs', [])
+    
+    def get_query_results(self):
+        """
+        Получить сырые результаты запросов
+        
+        Returns:
+            list: список сырых результатов
+        """
+        return getattr(self, 'query_results', [])
