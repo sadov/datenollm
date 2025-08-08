@@ -203,7 +203,7 @@ class DatenoSearchChatWidget(ChatWidget):
     def _history2html(self, history=None):
         if not history:
             history = self.history
-        out = ''
+        out = '==============================================='
         idx = 1
         num = ''
         for item in history:
@@ -881,7 +881,11 @@ class DatenoSearchQuerySelector(QuerySelector):
             
         query = selected_queries[0]
         df = display_dfs[0]
-        
+        print('===============================================')
+        print(f"Query: {query['query']}")
+        print('===============================================')
+
+
         print(f"\n📊 Search Results:")
         print("=" * 50)
         print(f"\n🔍 Query: {query['query']}")
