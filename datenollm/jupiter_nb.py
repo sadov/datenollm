@@ -329,6 +329,39 @@ def create_dateno_search_selector(client, queries_data):
         DatenoSearchQuerySelector: настроенный селектор
     """
     return DatenoSearchQuerySelector(client, queries_data)
+
+
+def ask_llm_and_create_selector(client, query, context_file=None, history_file=None, params=None):
+    """
+    Выполняет запрос к LLM и создает QuerySelector с результатами
+    
+    Args:
+        client: DatenoClient instance
+        query: строка запроса
+        context_file: файл контекста (опционально)
+        history_file: файл истории (опционально)
+        params: дополнительные параметры (опционально)
+        
+    Returns:
+        tuple: (selector, response_dict, history, error)
+    """
+    # Выполняем запрос к LLM
+    query_text, result_json, history, error = ask_llm(client, query, context_file, history_file, params)
+    
+    if error:
+        return None, None, history, error
+    
+    try:
+        # Парсим JSON результат
+        response = json.loads(result_json)
+        
+        # Создаем селектор
+        selector = create_dateno_search_selector(client, response['queries'])
+        
+        return selector, response, history, None
+        
+    except (json.JSONDecodeError, KeyError) as e:
+        return None, None, history, f"Ошибка парсинга результата: {e}"
     
 
 class QuerySelector:
