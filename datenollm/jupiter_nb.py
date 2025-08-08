@@ -588,9 +588,9 @@ class QuerySelector:
         print('===============================================')
         # Create options for radio buttons
         options = []
-        for idx, query in enumerate(self.queries):
+        for idx, query in enumerate(self.queries, 1):  # Start from 1
             option_text = self.format_text_func(idx, query)
-            options.append((option_text, idx))
+            options.append((option_text, idx - 1))  # Keep original index for value
         
         # Create single RadioButtons widget
         self.radio_buttons = widgets.RadioButtons(
