@@ -305,6 +305,128 @@ def display_table(df, table_id='nb-table'):
 
     return widgets.HTML(styled_html)
 
+
+def display_table_with_pagination(df, table_id='nb-table', page_size=10):
+    """
+    Отображает таблицу с пагинацией
+    
+    Args:
+        df: DataFrame для отображения
+        table_id: ID таблицы
+        page_size: количество строк на страницу
+        
+    Returns:
+        widgets.HTML: виджет с таблицей и элементами управления
+    """
+    if df.empty:
+        return widgets.HTML("<p>Нет данных для отображения</p>")
+    
+    total_rows = len(df)
+    total_pages = (total_rows + page_size - 1) // page_size
+    
+    # JavaScript для пагинации
+    pagination_js = f"""
+    <script>
+    let currentPage = 1;
+    const pageSize = {page_size};
+    const totalRows = {total_rows};
+    const totalPages = {total_pages};
+    
+    function showPage(page) {{
+        const table = document.getElementById('{table_id}');
+        const rows = table.getElementsByTagName('tr');
+        const startRow = (page - 1) * pageSize + 1; // +1 для заголовка
+        const endRow = Math.min(startRow + pageSize, rows.length);
+        
+        // Скрываем все строки
+        for (let i = 1; i < rows.length; i++) {{
+            rows[i].style.display = 'none';
+        }}
+        
+        // Показываем строки текущей страницы
+        for (let i = startRow; i < endRow; i++) {{
+            rows[i].style.display = '';
+        }}
+        
+        // Обновляем информацию о страницах
+        document.getElementById('page-info').textContent = 
+            `Страница ${{page}} из ${{totalPages}} (всего записей: ${{totalRows}})`;
+        
+        // Обновляем состояние кнопок
+        document.getElementById('prev-btn').disabled = page <= 1;
+        document.getElementById('next-btn').disabled = page >= totalPages;
+        
+        currentPage = page;
+    }}
+    
+    function changePageSize() {{
+        const newSize = parseInt(document.getElementById('page-size').value);
+        location.reload(); // Перезагружаем с новым размером страницы
+    }}
+    
+    // Инициализация
+    window.onload = function() {{
+        showPage(1);
+    }};
+    </script>
+    """
+    
+    # HTML для элементов управления
+    controls_html = f"""
+    <div style="margin: 10px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <button id="prev-btn" onclick="showPage(currentPage - 1)" style="padding: 5px 10px;">← Предыдущая</button>
+            <span id="page-info">Страница 1 из {total_pages}</span>
+            <button id="next-btn" onclick="showPage(currentPage + 1)" style="padding: 5px 10px;">Следующая →</button>
+            
+            <div style="margin-left: auto;">
+                <label for="page-size">Строк на страницу:</label>
+                <select id="page-size" onchange="changePageSize()" style="margin-left: 5px;">
+                    <option value="5" {'selected' if page_size == 5 else ''}>5</option>
+                    <option value="10" {'selected' if page_size == 10 else ''}>10</option>
+                    <option value="25" {'selected' if page_size == 25 else ''}>25</option>
+                    <option value="50" {'selected' if page_size == 50 else ''}>50</option>
+                    <option value="100" {'selected' if page_size == 100 else ''}>100</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    """
+    
+    # Создаем таблицу
+    html_table = df.to_html(escape=False, table_id=table_id)
+    
+    # Объединяем все элементы
+    styled_html = f"""
+    <style>
+    #{table_id} {{
+        width: 100%;
+        border-collapse: collapse;
+    }}
+    #{table_id} td, #{table_id} th {{
+        text-align: left !important;
+        vertical-align: top;
+        padding: 8px;
+        border: 1px solid #ddd;
+    }}
+    #{table_id} th {{
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }}
+    #{table_id} tr:nth-child(even) {{
+        background-color: #f9f9f9;
+    }}
+    #{table_id} tr:hover {{
+        background-color: #f5f5f5;
+    }}
+    </style>
+    {controls_html}
+    {html_table}
+    {pagination_js}
+    """
+    
+    return widgets.HTML(styled_html)
+
 def copy_test_data(path=DRIVE_PATH):
     os.makedirs(path, exist_ok=True)
     # Получаем путь к текущему файлу и находим папку test в пакете datenollm
@@ -420,13 +542,14 @@ class QuerySelector:
     
     def _create_interface(self):
         """Create user interface"""
-        # Create checkboxes
+        # Create radio buttons for single selection
+        self.radio_buttons = []
         for idx, query in enumerate(self.queries):
-            checkbox_text = self.format_text_func(idx, query)
+            radio_text = self.format_text_func(idx, query)
             
-            checkbox = widgets.Checkbox(
-                value=False,
-                description=checkbox_text,
+            radio = widgets.RadioButtons(
+                options=[(radio_text, idx)],
+                value=None,
                 layout=widgets.Layout(
                     width='auto',
                     margin='2px 0px',
@@ -437,7 +560,7 @@ class QuerySelector:
                 }
             )
             
-            self.checkboxes.append((checkbox, query))
+            self.radio_buttons.append((radio, query))
         
         # Create control buttons
         self._create_control_buttons()
@@ -448,20 +571,13 @@ class QuerySelector:
         self._create_main_container()
     
     def _create_control_buttons(self):
-        """Create buttons for mass select/deselect"""
-        self.select_all_button = widgets.Button(
-            description="Select All",
-            button_style='info',
-            layout=widgets.Layout(width='120px', margin='2px')
-        )
-        self.select_all_button.on_click(self._select_all_click)
-        
-        self.deselect_all_button = widgets.Button(
-            description="Deselect All",
+        """Create buttons for clearing selection"""
+        self.clear_selection_button = widgets.Button(
+            description="Clear Selection",
             button_style='warning',
             layout=widgets.Layout(width='120px', margin='2px')
         )
-        self.deselect_all_button.on_click(self._deselect_all_click)
+        self.clear_selection_button.on_click(self._clear_selection_click)
     
     def _create_action_buttons(self):
         """Create action buttons"""
@@ -519,18 +635,18 @@ class QuerySelector:
     def _get_selected_queries(self):
         """Get list of selected queries (internal method)"""
         selected_queries = []
-        for checkbox, query in self.checkboxes:
-            if checkbox.value:
+        for radio, query in self.radio_buttons:
+            if radio.value is not None:
                 selected_queries.append(query)
         return selected_queries
     
     def _create_main_container(self):
         """Create main interface container"""
         # Control buttons container
-        control_buttons = widgets.HBox([self.select_all_button, self.deselect_all_button])
+        control_buttons = widgets.HBox([self.clear_selection_button])
         
-        # Checkbox container
-        checkbox_container = widgets.VBox([checkbox for checkbox, _ in self.checkboxes])
+        # Radio buttons container
+        radio_container = widgets.VBox([radio for radio, _ in self.radio_buttons])
         
         # Action buttons container
         if len(self.action_button_widgets) > 1:
@@ -543,19 +659,14 @@ class QuerySelector:
         # Main container
         self.main_container = widgets.VBox([
             control_buttons,
-            checkbox_container,
+            radio_container,
             action_buttons_container
         ])
     
-    def _select_all_click(self, b):
-        """Handler for 'Select All' button"""
-        for checkbox, _ in self.checkboxes:
-            checkbox.value = True
-    
-    def _deselect_all_click(self, b):
-        """Handler for 'Deselect All' button"""
-        for checkbox, _ in self.checkboxes:
-            checkbox.value = False
+    def _clear_selection_click(self, b):
+        """Handler for 'Clear Selection' button"""
+        for radio, _ in self.radio_buttons:
+            radio.value = None
     
     def _on_execute_click(self, b):
         """Handler for default execute button"""
@@ -641,15 +752,15 @@ class QuerySelector:
         """
         return self._get_selected_queries()
     
-    def set_selected(self, indices):
+    def set_selected(self, index):
         """
-        Programmatically set selected queries by indices
+        Programmatically set selected query by index
         
         Args:
-            indices: list of query indices to select
+            index: query index to select
         """
-        for i, (checkbox, _) in enumerate(self.checkboxes):
-            checkbox.value = i in indices
+        if 0 <= index < len(self.radio_buttons):
+            self.radio_buttons[index][0].value = index
 
 
 class DatenoSearchQuerySelector(QuerySelector):
@@ -683,11 +794,15 @@ class DatenoSearchQuerySelector(QuerySelector):
         Default query execution function
         
         Args:
-            selected_queries: list of selected query objects
+            selected_queries: list of selected query objects (should contain only one)
         """
-        print(f"🔍 Starting search for {len(selected_queries)} queries:")
-        for i, query_data in enumerate(selected_queries, 1):
-            print(f"  {i}. Searching: {query_data['query']}")
+        if len(selected_queries) != 1:
+            print("⚠️ Пожалуйста, выберите только один запрос для выполнения")
+            return None
+            
+        query_data = selected_queries[0]
+        print(f"🔍 Выполняем поиск: {query_data['query']}")
+        
         request = json.dumps({'queries': selected_queries})
         result = self.client.client.predict(llm_response=request, api_name="/dateno_search")
 
@@ -712,27 +827,33 @@ class DatenoSearchQuerySelector(QuerySelector):
     
     def _display_results(self, selected_queries, display_dfs):
         """
-        Отображает результаты поиска в виде таблиц
+        Отображает результаты поиска в виде таблиц с пагинацией
         
         Args:
-            selected_queries: список выбранных запросов
+            selected_queries: список выбранных запросов (должен содержать только один)
             display_dfs: список DataFrame с результатами
         """
+        if len(selected_queries) != 1:
+            print("⚠️ Пожалуйста, выберите только один запрос для просмотра результатов")
+            return
+            
+        query = selected_queries[0]
+        df = display_dfs[0]
+        
         print(f"\n📊 Результаты поиска:")
         print("=" * 50)
+        print(f"\n🔍 Запрос: {query['query']}")
         
-        for i, (query, df) in enumerate(zip(selected_queries, display_dfs)):
-            print(f"\n🔍 Запрос {i+1}: {query['query']}")
-            if query.get('filters'):
-                filters_str = ', '.join([f"{f['name']}={f['value']}" for f in query['filters']])
-                print(f"   Фильтры: {filters_str}")
-            
-            if not df.empty:
-                print(f"   Найдено записей: {len(df)}")
-                display(display_table(df, table_id=f'query-{i+1}-table'))
-            else:
-                print("   ❌ Результаты не найдены")
-            print("-" * 30)
+        if query.get('filters'):
+            filters_str = ', '.join([f"{f['name']}={f['value']}" for f in query['filters']])
+            print(f"   Фильтры: {filters_str}")
+        
+        if not df.empty:
+            print(f"   Найдено записей: {len(df)}")
+            display(display_table_with_pagination(df, table_id='query-results-table'))
+        else:
+            print("   ❌ Результаты не найдены")
+        print("-" * 30)
     
     def get_display_dfs(self):
         """
