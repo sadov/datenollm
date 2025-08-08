@@ -151,7 +151,7 @@ class ChatWidget:
     def _history2html(self, history=None):
         if not history:
             history = self.history
-        out = '==============================================='
+        out = '===============================================<br>'
         idx = 1
         num = ''
         for item in history:
@@ -203,7 +203,7 @@ class DatenoSearchChatWidget(ChatWidget):
     def _history2html(self, history=None):
         if not history:
             history = self.history
-        out = '==============================================='
+        out = '===============================================<br>'
         idx = 1
         num = ''
         for item in history:
@@ -243,7 +243,7 @@ class QueryAssistantChatWidget(ChatWidget):
     def _history2html(self, history=None):
         if not history:
             history = self.history
-        out = '==============================================='
+        out = '===============================================<br>'
         idx = 1
         num = ''
         for item in history:
@@ -595,7 +595,11 @@ class QuerySelector:
         self.radio_buttons = widgets.RadioButtons(
             options=options,
             value=None,
-            description='===============================================\nSelect query:',
+            description="""
+            <br>
+            ===============================================<br>
+            Select query:<br>
+            """,
             layout=widgets.Layout(
                 width='auto',
                 margin='10px 0px',
