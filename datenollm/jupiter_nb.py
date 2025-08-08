@@ -585,6 +585,7 @@ class QuerySelector:
     
     def _create_interface(self):
         """Create user interface"""
+        print('===============================================<br>')
         # Create options for radio buttons
         options = []
         for idx, query in enumerate(self.queries):
@@ -595,11 +596,7 @@ class QuerySelector:
         self.radio_buttons = widgets.RadioButtons(
             options=options,
             value=None,
-            description="""
-            <br>
-            ===============================================<br>
-            Select query:<br>
-            """,
+            description="Select query:",
             layout=widgets.Layout(
                 width='auto',
                 margin='10px 0px',
