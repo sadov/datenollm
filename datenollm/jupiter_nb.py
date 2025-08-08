@@ -308,16 +308,16 @@ def display_table(df, table_id='nb-table'):
 
 class PaginatedTableWidget:
     """
-    Виджет для отображения таблицы с пагинацией
+    Widget for displaying table with pagination
     """
     
     def __init__(self, df, page_size=10):
         """
-        Инициализация виджета
+        Initialize widget
         
         Args:
-            df: DataFrame для отображения
-            page_size: количество строк на страницу
+            df: DataFrame to display
+            page_size: number of rows per page
         """
         self.df = df
         self.page_size = page_size
@@ -329,38 +329,38 @@ class PaginatedTableWidget:
         self._update_display()
     
     def _create_widgets(self):
-        """Создание виджетов управления"""
-        # Кнопки навигации
+        """Create control widgets"""
+        # Navigation buttons
         self.prev_button = widgets.Button(
-            description='← Предыдущая',
+            description='← Previous',
             disabled=True,
             layout=widgets.Layout(width='120px')
         )
         self.prev_button.on_click(self._prev_page)
         
         self.next_button = widgets.Button(
-            description='Следующая →',
+            description='Next →',
             disabled=self.total_pages <= 1,
             layout=widgets.Layout(width='120px')
         )
         self.next_button.on_click(self._next_page)
         
-        # Информация о страницах
+        # Page information
         self.page_info = widgets.HTML()
         
-        # Выбор размера страницы
+        # Page size selection
         self.page_size_dropdown = widgets.Dropdown(
             options=[5, 10, 25, 50, 100],
             value=self.page_size,
-            description='Строк на страницу:',
+            description='Rows per page:',
             layout=widgets.Layout(width='200px')
         )
         self.page_size_dropdown.observe(self._on_page_size_change, names='value')
         
-        # Таблица
+        # Table
         self.table_widget = widgets.HTML()
         
-        # Контейнер для элементов управления
+        # Controls container
         self.controls = widgets.HBox([
             self.prev_button,
             self.page_info,
@@ -369,34 +369,34 @@ class PaginatedTableWidget:
             self.page_size_dropdown
         ])
         
-        # Основной контейнер
+        # Main container
         self.container = widgets.VBox([
             self.controls,
             self.table_widget
         ])
     
     def _update_display(self):
-        """Обновление отображения"""
+        """Update display"""
         if self.df.empty:
-            self.table_widget.value = "<p>Нет данных для отображения</p>"
+            self.table_widget.value = "<p>No data to display</p>"
             self.page_info.value = ""
             return
         
-        # Вычисляем индексы для текущей страницы
+        # Calculate indices for current page
         start_idx = (self.current_page - 1) * self.page_size
         end_idx = min(start_idx + self.page_size, self.total_rows)
         
-        # Получаем данные для текущей страницы
+        # Get data for current page
         page_df = self.df.iloc[start_idx:end_idx]
         
-        # Обновляем информацию о страницах
-        self.page_info.value = f"Страница {self.current_page} из {self.total_pages} (всего записей: {self.total_rows})"
+        # Update page information
+        self.page_info.value = f"Page {self.current_page} of {self.total_pages} (total records: {self.total_rows})"
         
-        # Обновляем состояние кнопок
+        # Update button states
         self.prev_button.disabled = self.current_page <= 1
         self.next_button.disabled = self.current_page >= self.total_pages
         
-        # Отображаем таблицу
+        # Display table
         html_table = page_df.to_html(escape=False, table_id='paginated-table')
         styled_html = f"""
         <style>
@@ -434,39 +434,39 @@ class PaginatedTableWidget:
         self.table_widget.value = styled_html
     
     def _prev_page(self, b):
-        """Переход на предыдущую страницу"""
+        """Go to previous page"""
         if self.current_page > 1:
             self.current_page -= 1
             self._update_display()
     
     def _next_page(self, b):
-        """Переход на следующую страницу"""
+        """Go to next page"""
         if self.current_page < self.total_pages:
             self.current_page += 1
             self._update_display()
     
     def _on_page_size_change(self, change):
-        """Изменение размера страницы"""
+        """Change page size"""
         self.page_size = change['new']
         self.total_pages = (self.total_rows + self.page_size - 1) // self.page_size
-        self.current_page = 1  # Возвращаемся на первую страницу
+        self.current_page = 1  # Return to first page
         self._update_display()
     
     def display(self):
-        """Отображение виджета"""
+        """Display widget"""
         return self.container
 
 
 def display_table_with_pagination(df, page_size=10):
     """
-    Функция-обертка для создания виджета с пагинацией
+    Wrapper function for creating paginated table widget
     
     Args:
-        df: DataFrame для отображения
-        page_size: количество строк на страницу
+        df: DataFrame to display
+        page_size: number of rows per page
         
     Returns:
-        PaginatedTableWidget: виджет с таблицей и пагинацией
+        PaginatedTableWidget: widget with table and pagination
     """
     return PaginatedTableWidget(df, page_size)
 
@@ -484,49 +484,49 @@ def copy_test_data(path=DRIVE_PATH):
 
 def create_dateno_search_selector(client, queries_data):
     """
-    Создает QuerySelector для поиска в Dateno с автоматическим отображением результатов
+    Creates QuerySelector for Dateno search with automatic result display
     
     Args:
         client: DatenoClient instance
-        queries_data: список запросов для выбора
+        queries_data: list of queries to select from
         
     Returns:
-        DatenoSearchQuerySelector: настроенный селектор
+        DatenoSearchQuerySelector: configured selector
     """
     return DatenoSearchQuerySelector(client, queries_data)
 
 
 def ask_llm_and_create_selector(client, query, context_file=None, history_file=None, params=None):
     """
-    Выполняет запрос к LLM и создает QuerySelector с результатами
+    Executes LLM query and creates QuerySelector with results
     
     Args:
         client: DatenoClient instance
-        query: строка запроса
-        context_file: файл контекста (опционально)
-        history_file: файл истории (опционально)
-        params: дополнительные параметры (опционально)
+        query: query string
+        context_file: context file (optional)
+        history_file: history file (optional)
+        params: additional parameters (optional)
         
     Returns:
         tuple: (selector, response_dict, history, error)
     """
-    # Выполняем запрос к LLM
+    # Execute LLM query
     query_text, result_json, history, error = ask_llm(client, query, context_file, history_file, params)
     
     if error:
         return None, None, history, error
     
     try:
-        # Парсим JSON результат
+        # Parse JSON result
         response = json.loads(result_json)
         
-        # Создаем селектор
+        # Create selector
         selector = create_dateno_search_selector(client, response['queries'])
         
         return selector, response, history, None
         
     except (json.JSONDecodeError, KeyError) as e:
-        return None, None, history, f"Ошибка парсинга результата: {e}"
+        return None, None, history, f"Error parsing result: {e}"
     
 
 class QuerySelector:
@@ -595,7 +595,7 @@ class QuerySelector:
         self.radio_buttons = widgets.RadioButtons(
             options=options,
             value=None,
-            description='Выберите запрос:',
+            description='Select query:',
             layout=widgets.Layout(
                 width='auto',
                 margin='10px 0px',
@@ -839,16 +839,16 @@ class DatenoSearchQuerySelector(QuerySelector):
             selected_queries: list of selected query objects (should contain only one)
         """
         if len(selected_queries) != 1:
-            print("⚠️ Пожалуйста, выберите только один запрос для выполнения")
+            print("⚠️ Please select only one query to execute")
             return None
             
         query_data = selected_queries[0]
-        print(f"🔍 Выполняем поиск: {query_data['query']}")
+        print(f"🔍 Executing search: {query_data['query']}")
         
         request = json.dumps({'queries': selected_queries})
         result = self.client.client.predict(llm_response=request, api_name="/dateno_search")
 
-        # Обрабатываем результаты и создаем dataframes
+        # Process results and create dataframes
         display_dfs = []
         for query_result in result:
             hits = query_result['results']['hits']['hits']
@@ -856,47 +856,47 @@ class DatenoSearchQuerySelector(QuerySelector):
                 df = dateno2df(hits)
                 display_dfs.append(df)
             else:
-                display_dfs.append(pd.DataFrame())  # Пустой DataFrame если нет результатов
+                display_dfs.append(pd.DataFrame())  # Empty DataFrame if no results
         
-        # Сохраняем результаты для доступа
+        # Save results for access
         self.display_dfs = display_dfs
         self.query_results = result
         
-        # Отображаем результаты
+        # Display results
         self._display_results(selected_queries, display_dfs)
         
         return result
     
     def _display_results(self, selected_queries, display_dfs):
         """
-        Отображает результаты поиска в виде таблиц с пагинацией
+        Displays search results as paginated tables
         
         Args:
-            selected_queries: список выбранных запросов (должен содержать только один)
-            display_dfs: список DataFrame с результатами
+            selected_queries: list of selected queries (should contain only one)
+            display_dfs: list of DataFrames with results
         """
         if len(selected_queries) != 1:
-            print("⚠️ Пожалуйста, выберите только один запрос для просмотра результатов")
+            print("⚠️ Please select only one query to view results")
             return
             
         query = selected_queries[0]
         df = display_dfs[0]
         
-        print(f"\n📊 Результаты поиска:")
+        print(f"\n📊 Search Results:")
         print("=" * 50)
-        print(f"\n🔍 Запрос: {query['query']}")
+        print(f"\n🔍 Query: {query['query']}")
         
         if query.get('filters'):
             filters_str = ', '.join([f"{f['name']}={f['value']}" for f in query['filters']])
-            print(f"   Фильтры: {filters_str}")
+            print(f"   Filters: {filters_str}")
         
         if not df.empty:
-            print(f"   Найдено записей: {len(df)}")
-            # Создаем виджет с пагинацией и отображаем его
+            print(f"   Records found: {len(df)}")
+            # Create paginated widget and display it
             table_widget = display_table_with_pagination(df)
             display(table_widget.display())
         else:
-            print("   ❌ Результаты не найдены")
+            print("   ❌ No results found")
         print("-" * 30)
     
     def get_display_dfs(self):
