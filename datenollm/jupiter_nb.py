@@ -844,7 +844,11 @@ class DatenoSearchQuerySelector(QuerySelector):
             return None
             
         query_data = selected_queries[0]
-        print(f"🔍 Executing search: {query_data['query']}")
+        if query_data.get('filters'):
+            filters_str = ', '.join([f"{f['name']}={f['value']}" for f in query_data['filters']])
+            print(f"🔍 Executing search: \"{query_data['query']}\" with filters: {filters_str}")
+        else:
+            print(f"🔍 Executing search: \"{query_data['query']}\"")
         
         request = json.dumps({'queries': selected_queries})
         result = self.client.client.predict(llm_response=request, api_name="/dateno_search")
