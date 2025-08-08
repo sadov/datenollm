@@ -275,8 +275,9 @@ class QueryAssistantChatWidget(ChatWidget):
 
 def dateno2df(results):
     df_data = []
-    for result in results:
+    for i, result in enumerate(results, 1):  # Начинаем с 1
         df_data.append({
+            'number': i,
             '_id': result['_id'],
             'title': result['_source']['dataset']['title'],
             'description': result['_source']['dataset'].get('description', ''),
@@ -285,7 +286,7 @@ def dateno2df(results):
         })
 
     df = pd.DataFrame(df_data)
-    display_df = df[['datasets']]
+    display_df = df[['number', 'datasets']]
 
     return display_df
 
@@ -419,6 +420,14 @@ class PaginatedTableWidget:
         }}
         #paginated-table tr:hover {{
             background-color: #f5f5f5;
+        }}
+        /* Уменьшаем ширину столбца с номерами */
+        #paginated-table th:first-child,
+        #paginated-table td:first-child {{
+            width: 60px;
+            min-width: 60px;
+            max-width: 60px;
+            text-align: center !important;
         }}
         </style>
         {html_table}
@@ -817,9 +826,9 @@ class DatenoSearchQuerySelector(QuerySelector):
         if query.get('filters'):
             qfilters = [f'{f["name"]}={f["value"]}' for f in query['filters']]
             qfilters = ', '.join(qfilters)
-            checkbox_text = f'{idx}. <b>Query:</b> {question} | <b>Filters:</b> {qfilters}'
+            checkbox_text = f'{idx}. Query: {question} | Filters: {qfilters}'
         else:
-            checkbox_text = f'{idx}. <b>Query:</b> {question}'
+            checkbox_text = f'{idx}. Query: {question}'
             
         return checkbox_text
     def _default_execute(self, selected_queries):
