@@ -23,6 +23,7 @@ dateno-ask-llm = "datenollm.cli.ask:main"
 dateno-get-logs = "datenollm.cli.logs:main"
 dateno-like = "datenollm.cli.like:main"
 dateno-flagged-log = "datenollm.cli.flagged_log:main"
+dateno-collab2gist = "datenollm.cli.collab2gist:main"
 
 [build-system]
 requires = ["setuptools>=61.0"]

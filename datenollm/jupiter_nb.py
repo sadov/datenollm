@@ -261,12 +261,14 @@ class QueryAssistantChatWidget(ChatWidget):
                         icon = "👎 "
                     else:
                         icon = ''
-                out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
+                #out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
+                out += f"<strong>Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
                 queries=json.loads(item['content'])
                 subnum = 1
                 for query in queries['queries']:
                     out += '<div style="margin:0.2em 0 0.7em 1.5em;">'
-                    out += f"<strong>{num}.{subnum}. Dateno query:</strong> <em>{query['query']}</em> "
+                    #out += f"<strong>{num}.{subnum}. Dateno query:</strong> <em>{query['query']}</em> "
+                    out += f"<strong>{subnum}. Dateno query:</strong> <em>{query['query']}</em> "
                     if query['explanation']:
                         out += f"&nbsp;&nbsp;&nbsp;&nbsp;<strong>Explanation:</strong> {query['explanation']}"
                     out += "</div>"
@@ -472,7 +474,7 @@ def display_table_with_pagination(df, page_size=10):
 
 def copy_test_data(path=DRIVE_PATH):
     os.makedirs(path, exist_ok=True)
-    # Получаем путь к текущему файлу и находим папку test в пакете datenollm
+    # Get path to current file and find test folder in datenollm package
     current_dir = os.path.dirname(os.path.abspath(__file__))
     test_dir = os.path.join(current_dir, 'test')
     if os.path.exists(test_dir):
@@ -480,6 +482,34 @@ def copy_test_data(path=DRIVE_PATH):
             source_file = os.path.join(test_dir, file_name)
             if os.path.isfile(source_file):
                 shutil.copy(source_file, path)
+
+
+def collab2gist(data):
+    """
+    Function that removes metadata.widgets from JSON data.
+    Useful for converting Jupyter notebooks from Google Colab to properly displayed GitHub Gist format.
+    
+    Args:
+        data: JSON data (dict) to process
+        
+    Returns:
+        dict: Processed JSON data with metadata.widgets removed
+    """
+    # Create a copy to avoid modifying the original data
+    processed_data = data.copy()
+    
+    # Remove metadata.widgets if it exists
+    if 'metadata' in processed_data and 'widgets' in processed_data['metadata']:
+        del processed_data['metadata']['widgets']
+        # If metadata becomes empty, remove it entirely
+        if not processed_data['metadata']:
+            del processed_data['metadata']
+    
+    return processed_data
+
+
+# CLI functionality moved to collab2gist.py
+# This module is for importing the collab2gist function
 
 
 def create_dateno_search_selector(client, queries_data):
