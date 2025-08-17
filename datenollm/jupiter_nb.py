@@ -212,7 +212,7 @@ class DatenoSearchChatWidget(ChatWidget):
         self.client = client
         super().__init__(history_file)
 
-    def _history2html(self, history=None):
+    def _history2html(self, numbering=False, history=None):
         if not history:
             history = self.history
         out = '===============================================<br>'
@@ -233,12 +233,15 @@ class DatenoSearchChatWidget(ChatWidget):
                         icon = "👎 "
                     else:
                         icon = ''
-                out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
+                if numbering:
+                    out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
+                else:
+                    out += f"<strong>Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
                 queries=json.loads(item['content'])
                 subnum = 1
                 for query in queries['queries']:
                     out += '<div style="margin:0.2em 0 0.7em 1.5em;">'
-                    out += f"<strong>{num}.{subnum}. Dateno query:</strong> <em>{query['query']}</em> "
+                    out += f"<strong>{subnum}. Dateno query:</strong> <em>{query['query']}</em> "
                     if query['filters']:
                         out += '&nbsp;&nbsp;&nbsp;&nbsp;<strong>Filters:</strong>'
                         for f in query['filters']:
@@ -256,14 +259,10 @@ class QueryAssistantChatWidget(ChatWidget):
         if not history:
             history = self.history
         out = '===============================================<br>'
-        idx = 1
-        num = ''
         for item in history:
             icon = ''
             if item['role'] == 'user':
                 question = item['content']
-                num = f'{idx}. '
-                idx += 1
             elif item['role'] == 'assistant':
                 metadata = item['metadata']
                 if metadata and metadata.get('like_dislike'):
