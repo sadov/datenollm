@@ -9,7 +9,7 @@ from langchain.schema import AIMessage, HumanMessage
 from .file_utils import read_json_file, read_text_file, save_json_file
 
 # Configure logging
-log_level = getattr(logging, os.environ.get('DATENOBOT_DEBUG', 'INFO').upper(), logging.INFO)
+log_level = getattr(logging, os.environ.get('DATENOLLM_DEBUG', 'INFO').upper(), logging.INFO)
 logging.basicConfig(
     level=log_level,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

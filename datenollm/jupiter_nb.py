@@ -16,6 +16,7 @@ from .file_utils import (
     save_json_file
 )
 
+
 def ask_llm(client, query, context_file=None, history_file=None, params=None):
   if not query:
     return None, None, None, "Ask something"
@@ -148,7 +149,7 @@ class ChatWidget:
     def update_display(self):
         self.result_label.value = self.get_result_text()
 
-    def _history2html(self, history=None):
+    def _history2html(self, numbering=False, history=None):
         if not history:
             history = self.history
         out = '===============================================<br>'
@@ -169,12 +170,15 @@ class ChatWidget:
                         icon = "👎 "
                     else:
                         icon = ''
-                out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
+                if numbering:
+                    out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
+                else:
+                    out += f"<strong>Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
                 queries=json.loads(item['content'])
                 subnum = 1
                 for query in queries['queries']:
                     out += '<div style="margin:0.2em 0 0.7em 1.5em;">'
-                    out += f"<strong>{num}.{subnum}. Query:</strong> <em>{query}</em> "
+                    out += f"<strong>{subnum}. Query:</strong> <em>{query}</em> "
                     subnum += 1
                     out += "</div>"
                     subnum += 1
@@ -185,8 +189,12 @@ class ChatWidget:
         return out
 
     def history_out(self):
-        out = self._history2html()
+        out = self._history2html(numbering=True)
         return out
+
+    def display_history(self):
+        history_output = self.history_out()
+        return widgets.HTML(value=history_output)
 
     def get_result_text(self):
         return self.last_history_out()
@@ -506,10 +514,6 @@ def collab2gist(data):
             del processed_data['metadata']
     
     return processed_data
-
-
-# CLI functionality moved to collab2gist.py
-# This module is for importing the collab2gist function
 
 
 def create_dateno_search_selector(client, queries_data):

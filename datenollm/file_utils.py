@@ -7,6 +7,13 @@ from pathlib import Path
 DRIVE_PATH = os.environ.get('DRIVE_PATH', '/content/drive/MyDrive/colab_data/dateno/')
 LOCAL_BASE_PATH = '.'
 
+log_level = getattr(logging, os.environ.get('DATENOLLM_DEBUG', 'ERROR').upper(), logging.INFO)
+logging.basicConfig(
+    level=log_level,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 def is_colab_environment():
     """Checks if the code is running in Google Colab"""
     try:
@@ -21,13 +28,13 @@ def mount_drive_if_needed():
         try:
             from google.colab import drive
             if not os.path.exists('/content/drive'):
-                print("Connecting Google Drive...")
+                logger.info("Connecting Google Drive...")
                 drive.mount('/content/drive')
-                print("Google Drive connected successfully!")
+                logger.debug("Google Drive connected successfully!")
             else:
-                print("Google Drive already connected")
+                logger.debug("Google Drive already connected")
         except Exception as e:
-            print(f"Error connecting Google Drive: {e}")
+            logger.error(f"Error connecting Google Drive: {e}")
             return False
     return True
 
@@ -81,13 +88,13 @@ def file_exists(file_path):
         exists = os.path.exists(full_path)
         
         if is_colab_environment():
-            print(f"Checking file in Google Drive: {full_path}")
+            logger.debug(f"Checking file in Google Drive: {full_path}")
         else:
-            print(f"Checking file locally: {full_path}")
-            
+            logger.debug(f"Checking file locally: {full_path}")
+
         return exists
     except Exception as e:
-        print(f"Error checking file existence: {e}")
+        logger.error(f"Error checking file existence: {e}")
         return False
 
 def create_directory_if_not_exists(dir_path):
@@ -105,7 +112,7 @@ def create_directory_if_not_exists(dir_path):
         Path(full_path).mkdir(parents=True, exist_ok=True)
         return True
     except Exception as e:
-        print(f"Error creating directory: {e}")
+        logger.error(f"Error creating directory: {e}")
         return False
 
 def list_files(dir_path="", pattern="*"):
@@ -124,13 +131,13 @@ def list_files(dir_path="", pattern="*"):
         path_obj = Path(full_path)
         
         if not path_obj.exists():
-            print(f"Directory doesn't exist: {full_path}")
+            logger.warning(f"Directory doesn't exist: {full_path}")
             return []
         
         files = list(path_obj.glob(pattern))
         return [str(f) for f in files if f.is_file()]
     except Exception as e:
-        print(f"Error getting file list: {e}")
+        logger.error(f"Error getting file list: {e}")
         return []
 
 def get_file_info(file_path):
@@ -160,7 +167,7 @@ def get_file_info(file_path):
             'environment': 'colab' if is_colab_environment() else 'local'
         }
     except Exception as e:
-        print(f"Error getting file information: {e}")
+        logger.error(f"Error getting file information: {e}")
         return None
 
 def read_json_file(file_path, encoding='utf-8'):
@@ -172,7 +179,7 @@ def read_json_file(file_path, encoding='utf-8'):
     except FileNotFoundError:
         return []
     except Exception as e:
-        print(f"Error reading JSON file {file_path}: {e}", file=sys.stderr)
+        logger.error(f"Error reading JSON file {file_path}: {e}")
         sys.exit(1)
 
 def read_text_file(file_path, encoding='utf-8'):
@@ -182,7 +189,7 @@ def read_text_file(file_path, encoding='utf-8'):
         with open(file_path, 'r', encoding=encoding) as f:
             return f.read()
     except Exception as e:
-        print(f"Error reading text file {file_path}: {e}", file=sys.stderr)
+        logger.error(f"Error reading text file {file_path}: {e}")
         sys.exit(1)
 
 def save_json_file(data, file_path, encoding='utf-8'):
@@ -192,31 +199,31 @@ def save_json_file(data, file_path, encoding='utf-8'):
         with open(file_path, 'w', encoding=encoding) as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"Error saving JSON file {file_path}: {e}", file=sys.stderr)
+        logger.error(f"Error saving JSON file {file_path}: {e}")
         sys.exit(1)
 
 
 # Usage example
 def fs_test():
     # Testing functions
-    print(f"Environment: {'Google Colab' if is_colab_environment() else 'Local system'}")
-    
+    logger.info(f"Environment: {'Google Colab' if is_colab_environment() else 'Local system'}")
+
     # Check file existence
     test_file = "test.txt"
-    print(f"File {test_file} exists: {file_exists(test_file)}")
+    logger.info(f"File {test_file} exists: {file_exists(test_file)}")
     
     # Get full path
-    print(f"Full path: {get_full_path(test_file)}")
-    
+    logger.info(f"Full path: {get_full_path(test_file)}")
+
     # Create directory
     create_directory_if_not_exists("test_folder")
     
     # List files
     files = list_files()
-    print(f"Found files: {len(files)}")
-    
+    logger.info(f"Found files: {len(files)}")
+
     # File information
     info = get_file_info(test_file)
     if info:
-        print(f"File information: {info}")
+        logger.info(f"File information: {info}")
 
