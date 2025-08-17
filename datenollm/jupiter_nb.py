@@ -187,8 +187,11 @@ class ChatWidget:
                     subnum += 1
         return out
 
-    def last_history_out(self):
-        out = self._history2html(self.history[-2:])
+    def last_history_out(self, history=None):
+        if history is None:
+            history = self.history
+        print(f'{history=}')
+        out = self._history2html(history[-2:])
         return out
 
     def history_out(self, history=None):
@@ -206,7 +209,6 @@ class ChatWidget:
         # By default, show only last_history_out
         buttons = widgets.HBox([self.like_btn, self.dislike_btn, self.none_btn])
         history_html = self.last_history_out()
-        print(f'{history_html=}')
         return widgets.VBox([widgets.HTML(value=history_html), buttons])
 
 class DatenoSearchChatWidget(ChatWidget):
