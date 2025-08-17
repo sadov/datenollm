@@ -190,12 +190,13 @@ class ChatWidget:
     def last_history_out(self, history=None):
         if history is None:
             history = self.history
+        history = history[-2:]
         print(f'{history=}')
-        out = self._history2html(history[-2:])
+        out = self._history2html(history)
         return out
 
     def history_out(self, history=None):
-        out = self._history2html(numbering=True, history=history    )
+        out = self._history2html(numbering=True, history=history)
         return out
 
     def display_history(self):
