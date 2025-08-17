@@ -115,7 +115,6 @@ class ChatWidget:
         )
 
         self.result_label = widgets.HTML(
-            #value=self.get_result_text()
             value = self.last_history_out()
         )
 
@@ -148,7 +147,6 @@ class ChatWidget:
         self.handle_cick(None)
 
     def update_display(self):
-        #self.result_label.value = self.get_result_text()
         self.result_label.value = self.last_history_out()
 
 
@@ -191,7 +189,7 @@ class ChatWidget:
         if history is None:
             history = self.history
         history = history[-2:]
-        print(f'{history=}')
+        #print(f'{history=}')
         out = self._history2html(history=history)
         return out
 
@@ -202,9 +200,6 @@ class ChatWidget:
     def display_history(self):
         history_output = self.history_out()
         return widgets.HTML(value=history_output)
-
-    def get_result_text(self):
-        return self.last_history_out()
 
     def display(self):
         # By default, show only last_history_out
@@ -966,3 +961,9 @@ class DatenoSearchQuerySelector(QuerySelector):
             list: список сырых результатов
         """
         return getattr(self, 'query_results', [])
+    
+
+def results_table(query, data):
+  df = pd.DataFrame(data)
+  print(f"\nDatasets for query '{query}':\n")
+  return df
