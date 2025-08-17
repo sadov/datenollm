@@ -152,7 +152,7 @@ class ChatWidget:
         self.result_label.value = self.last_history_out()
 
 
-    def _history2html(self, numbering=False, history=None):
+    def _history2html(self, history=None, numbering=False):
         if not history:
             history = self.history
         out = '===============================================<br>'
@@ -192,11 +192,11 @@ class ChatWidget:
             history = self.history
         history = history[-2:]
         print(f'{history=}')
-        out = self._history2html(history)
+        out = self._history2html(history=history)
         return out
 
     def history_out(self, history=None):
-        out = self._history2html(numbering=True, history=history)
+        out = self._history2html(history=history, numbering=True)
         return out
 
     def display_history(self):
