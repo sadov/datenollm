@@ -115,7 +115,8 @@ class ChatWidget:
         )
 
         self.result_label = widgets.HTML(
-            value=self.get_result_text()
+            #value=self.get_result_text()
+            value = self.last_history_out()
         )
 
         self.like_btn.on_click(self.on_like)
@@ -147,7 +148,8 @@ class ChatWidget:
         self.handle_cick(None)
 
     def update_display(self):
-        self.result_label.value = self.get_result_text()
+        #self.result_label.value = self.get_result_text()
+        self.result_label.value = self.last_history_out()
 
     def _history2html(self, numbering=False, history=None):
         if not history:
@@ -188,8 +190,8 @@ class ChatWidget:
         out = self._history2html(self.history[-2:])
         return out
 
-    def history_out(self):
-        out = self._history2html(numbering=True)
+    def history_out(self, history=None):
+        out = self._history2html(numbering=True, history=history    )
         return out
 
     def display_history(self):
