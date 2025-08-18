@@ -197,8 +197,8 @@ class ChatWidget:
         out = self._history2html(history=history, numbering=True)
         return out
 
-    def display_history(self):
-        history_output = self.history_out()
+    def display_history(self, history=None):
+        history_output = self.history_out(history=history)
         return widgets.HTML(value=history_output)
 
     def display(self):
