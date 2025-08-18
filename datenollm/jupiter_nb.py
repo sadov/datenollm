@@ -32,11 +32,11 @@ def ask_llm(client, query, context_file=None, history_file=None, params=None):
             if isinstance(context_data, list):
                 history.extend(context_data)
             else:
-                print(f"Warning: context_file {context_file} does not contain a valid JSON list.")
+                return None, None, None, f"Warning: context_file {context_file} does not contain a valid JSON list."
         except Exception as e:
-            print(f"Error reading context_file {context_file}: {e}")
+            return None, None, None, f"Error reading context_file {context_file}: {e}"
     else:
-        print(f"Warning: context_file {context_file} does not exist.")
+        return None, None, None, f"Warning: context_file {context_file} does not exist."
 
   if history_file:
     history_file = get_full_path(history_file, DRIVE_PATH)
