@@ -22,13 +22,21 @@ def ask_llm(client, query, context_file=None, history_file=None, params=None):
     return None, None, None, "Ask something"
 
   history = []
-
+  
   if context_file:
     context_file = get_full_path(context_file, DRIVE_PATH)
     print(f'{context_file=}')
-
     if file_exists(context_file):
-      history.extend(read_json_file(context_file))
+        try:
+            context_data = read_json_file(context_file)
+            if isinstance(context_data, list):
+                history.extend(context_data)
+            else:
+                print(f"Warning: context_file {context_file} does not contain a valid JSON list.")
+        except Exception as e:
+            print(f"Error reading context_file {context_file}: {e}")
+    else:
+        print(f"Warning: context_file {context_file} does not exist.")
 
   if history_file:
     history_file = get_full_path(history_file, DRIVE_PATH)

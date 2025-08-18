@@ -78,17 +78,5 @@
     },
     "content": "{\"queries\":[{\"query\":\"income taxes for belgium in all official national langs with translation of query\",\"filters\":null},{\"query\":\"income taxes\",\"filters\":[{\"name\":\"source.countries.name\",\"value\":\"Belgium\"},{\"name\":\"source.langs.name\",\"value\":\"Dutch\"}]},{\"query\":\"impôts sur le revenu\",\"filters\":[{\"name\":\"source.countries.name\",\"value\":\"Belgium\"},{\"name\":\"source.langs.name\",\"value\":\"French\"}]},{\"query\":\"Einkommensteuer\",\"filters\":[{\"name\":\"source.countries.name\",\"value\":\"Belgium\"},{\"name\":\"source.langs.name\",\"value\":\"German\"}]},{\"query\":\"income taxes\",\"filters\":[{\"name\":\"source.countries.name\",\"value\":\"Belgium\"},{\"name\":\"source.langs.name\",\"value\":\"English\"}]}]}",
     "options": null
-  },
-  {
-    "role": "user",
-    "metadata": null,
-    "content": "income tax for Switzerland in all official national langs",
-    "options": null
-  },
-  {
-    "role": "assistant",
-    "metadata": null,
-    "content": "{\"queries\":[{\"query\":\"income tax for Switzerland in all official national langs\",\"filters\":null},{\"query\":\"income tax\",\"filters\":[{\"name\":\"source.countries.name\",\"value\":\"Switzerland\"},{\"name\":\"source.langs.name\",\"value\":\"German\"}]},{\"query\":\"impôt sur le revenu\",\"filters\":[{\"name\":\"source.countries.name\",\"value\":\"Switzerland\"},{\"name\":\"source.langs.name\",\"value\":\"French\"}]},{\"query\":\"imposta sul reddito\",\"filters\":[{\"name\":\"source.countries.name\",\"value\":\"Switzerland\"},{\"name\":\"source.langs.name\",\"value\":\"Italian\"}]},{\"query\":\"tassa sul reddito\",\"filters\":[{\"name\":\"source.countries.name\",\"value\":\"Switzerland\"},{\"name\":\"source.langs.name\",\"value\":\"Romansh\"}]},{\"query\":\"income tax\",\"filters\":[{\"name\":\"source.countries.name\",\"value\":\"Switzerland\"},{\"name\":\"source.langs.name\",\"value\":\"English\"}]}]}",
-    "options": null
   }
 ]
