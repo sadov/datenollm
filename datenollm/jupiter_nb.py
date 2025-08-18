@@ -202,10 +202,9 @@ class ChatWidget:
         return widgets.HTML(value=history_output)
 
     def display(self):
-        # By default, show only last_history_out
+        # By default, show only last_history_out and use self.result_label for dynamic updates
         buttons = widgets.HBox([self.like_btn, self.dislike_btn, self.none_btn])
-        history_html = self.last_history_out()
-        return widgets.VBox([widgets.HTML(value=history_html), buttons])
+        return widgets.VBox([self.result_label, buttons])
 
 class DatenoSearchChatWidget(ChatWidget):
     def __init__(self, client, history_file=None):
