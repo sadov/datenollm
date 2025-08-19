@@ -976,18 +976,18 @@ def results_table(query, data):
   return df
 
 
-class QueriesSelector(ipywidgets.VBox):
+class QueriesSelector(widgets.VBox):
     """
     Widget for selecting queries from a list of checkboxes for Google Colab
     """
     def __init__(self, queries):
         self.queries = queries
         # Adjusting layout to display full query strings
-        self.checkboxes = [ipywidgets.Checkbox(description=query['query'], layout=ipywidgets.Layout(width='auto')) for query in queries]
-        self.select_all_button = ipywidgets.Button(description="Select All")
-        self.select_none_button = ipywidgets.Button(description="Select None")
-        self.get_selected_button = ipywidgets.Button(description="Get Selected Queries")
-        self.output_area = ipywidgets.Output()
+        self.checkboxes = [widgets.Checkbox(description=query['query'], layout=widgets.Layout(width='auto')) for query in queries]
+        self.select_all_button = widgets.Button(description="Select All")
+        self.select_none_button = widgets.Button(description="Select None")
+        self.get_selected_button = widgets.Button(description="Get Selected Queries")
+        self.output_area = widgets.Output()
 
         self.select_all_button.on_click(self._on_select_all)
         self.select_none_button.on_click(self._on_select_none)
