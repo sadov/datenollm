@@ -575,7 +575,7 @@ def ask_llm_and_create_selector(client, query, context_file=None, history_file=N
 
 class QuerySelector:
     """
-    Class for creating interactive query checklist in Google Colab
+    Class for creating interactive query selector from checklist in Google Colab
     """
     
     def __init__(self, queries_data, format_text_func=None, execute_func=None, action_buttons=None):
@@ -974,3 +974,49 @@ def results_table(query, data):
   df = pd.DataFrame(data)
   print(f"\nDatasets for query '{query}':\n")
   return df
+
+
+class QueriesSelector(ipywidgets.VBox):
+    """
+    Widget for selecting queries from a list of checkboxes for Google Colab
+    """
+    def __init__(self, queries):
+        self.queries = queries
+        # Adjusting layout to display full query strings
+        self.checkboxes = [ipywidgets.Checkbox(description=query['query'], layout=ipywidgets.Layout(width='auto')) for query in queries]
+        self.select_all_button = ipywidgets.Button(description="Select All")
+        self.select_none_button = ipywidgets.Button(description="Select None")
+        self.get_selected_button = ipywidgets.Button(description="Get Selected Queries")
+        self.output_area = ipywidgets.Output()
+
+        self.select_all_button.on_click(self._on_select_all)
+        self.select_none_button.on_click(self._on_select_none)
+        self.get_selected_button.on_click(self._on_get_selected)
+
+        super().__init__([self.select_all_button, self.select_none_button] + self.checkboxes + [self.get_selected_button, self.output_area])
+
+    def _on_select_all(self, b):
+        for cb in self.checkboxes:
+            cb.value = True
+
+    def _on_select_none(self, b):
+        for cb in self.checkboxes:
+            cb.value = False
+
+    def _on_get_selected(self, b):
+        selected_queries = self.get_selected_queries()
+        with self.output_area:
+            self.output_area.clear_output()
+            print("Selected Queries:")
+            for query in selected_queries:
+                print(f"- {query['query']}")
+
+    def get_selected_queries(self):
+        return [self.queries[i] for i, cb in enumerate(self.checkboxes) if cb.value]
+
+    def save_selected_queries(self, filename="selected_queries.txt"):
+        selected_queries = self.get_selected_queries()
+        # Save the selected queries to a file or database
+        with open(get_full_path(filename), "w") as f:
+              json.dump(selected_queries, f, indent=4)
+        print(f"Selected queries saved to {filename}.")
