@@ -271,6 +271,7 @@ class QueryAssistantChatWidget(ChatWidget):
             if item['role'] == 'user':
                 query = item.get('content', '')
             elif item['role'] == 'assistant':
+                out += f'{item=}<br>'
                 question = item.get('question', '')
                 metadata = item.get('metadata', {})
                 if metadata and metadata.get('like_dislike'):
