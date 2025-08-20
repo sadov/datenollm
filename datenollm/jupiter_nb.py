@@ -269,9 +269,10 @@ class QueryAssistantChatWidget(ChatWidget):
         for item in history:
             icon = ''
             if item['role'] == 'user':
-                question = item['content']
+                query = item.get('content', '')
             elif item['role'] == 'assistant':
-                metadata = item['metadata']
+                question = item.get('question', '')
+                metadata = item.get('metadata', {})
                 if metadata and metadata.get('like_dislike'):
                     if metadata['like_dislike'] == 'Like':
                         icon = "👍 "
@@ -279,18 +280,21 @@ class QueryAssistantChatWidget(ChatWidget):
                         icon = "👎 "
                     else:
                         icon = ''
-                #out += f"<strong>{num}Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
-                out += f"<strong>Question:</strong> <strong><em>{question}</em></strong> {icon}<br>"
-                queries=json.loads(item['content'])
-                subnum = 1
-                for query in queries['queries']:
-                    out += '<div style="margin:0.2em 0 0.7em 1.5em;">'
-                    #out += f"<strong>{num}.{subnum}. Dateno query:</strong> <em>{query['query']}</em> "
-                    out += f"<strong>{subnum}. Dateno query:</strong> <em>{query['query']}</em> "
-                    if query['explanation']:
-                        out += f"&nbsp;&nbsp;&nbsp;&nbsp;<strong>Explanation:</strong> {query['explanation']}"
-                    out += "</div>"
-                    subnum += 1
+                if query:
+                    out += f"<strong>Query:</strong> <strong><em>{query}</em></strong> {icon}<br>"
+                if question:
+                    out += f"<strong>Question from LLM-agent:</strong> <strong><em>{question}</em></strong><br>"
+                queries = item.get('queries', [])
+                if queries:
+                    queries = json.loads(item['content'])
+                    subnum = 1
+                    for query in queries['queries']:
+                        out += '<div style="margin:0.2em 0 0.7em 1.5em;">'
+                        out += f"<strong>{subnum}. Dateno query:</strong> <em>{query['query']}</em> "
+                        if query['explanation']:
+                            out += f"&nbsp;&nbsp;&nbsp;&nbsp;<strong>Explanation:</strong> {query['explanation']}"
+                        out += "</div>"
+                        subnum += 1
         return out
 
 def dateno2df(results):
