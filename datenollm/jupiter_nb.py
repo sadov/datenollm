@@ -908,9 +908,15 @@ class DatenoSearchQuerySelector(QuerySelector):
         # Process results and create dataframes
         display_dfs = []
         for query_result in result:
-            hits = query_result['results']['hits']['hits']
-            if hits:
-                df = dateno2df(hits)
+            hits_data = query_result['results']
+            if isinstance(hits_data, dict) and 'hits' in hits_data and 'hits' in hits_data['hits']:
+                hits_list = hits_data['hits']['hits']
+            elif hasattr(hits_data, '__iter__') and not isinstance(hits_data, dict):
+                hits_list = list(hits_data)
+            else:
+                hits_list = []
+            if hits_list:
+                df = dateno2df(hits_list)
                 display_dfs.append(df)
             else:
                 display_dfs.append(pd.DataFrame())  # Empty DataFrame if no results
