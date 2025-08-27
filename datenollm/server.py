@@ -65,7 +65,7 @@ if not default_flagging_dir:
 
 
 class Server:
-    def __init__(self, validator,
+    def __init__(self, validator=None,
                  prompt=None, model=None, max_tokens=None,
                  temperature=None, top_p=None,
                  openai_api_base=None, flagging_dir=None):
@@ -108,12 +108,15 @@ class Server:
         if not openai_api_base:  # Use default openai_api_base if not provided
             openai_api_base = self.openai_api_base
         
-        logger.debug(f'{prompt=}')
-        logger.debug(f'{model=}')
-        logger.debug(f'{max_tokens=}')
-        logger.debug(f'{temperature=}')
-        logger.debug(f'{top_p=}')
-        logger.debug(f'{openai_api_base=}')
+        logger.debug(f"llm_query() parameters:")
+        logger.debug(f'  {message=}')
+        logger.debug(f'  {history=}')
+        logger.debug(f'  {prompt=}')
+        logger.debug(f'  {model=}')
+        logger.debug(f'  {max_tokens=}')
+        logger.debug(f'  {temperature=}')
+        logger.debug(f'  {top_p=}')
+        logger.debug(f'  {openai_api_base=}')
 
         llm = ChatOpenAI(
             openai_api_base = openai_api_base,
@@ -148,6 +151,82 @@ class Server:
                 response = {"question": "There seems to be something wrong with request processing. An invalid result was received. Try increasing 'Max new tokens' (max_tokens) parameter. If that doesn't help, contact support.", "queries": []}
                 return json.dumps(response)
         
+        return response
+
+    def llm_filter(self, message, history, data,
+                  prompt=None, model=None, max_tokens=None,
+                  temperature=None, top_p=None, openai_api_base=None):
+        if not prompt: # Use default prompt if not provided
+            prompt = self.prompt
+        if not model:  # Use default model if not provided
+            model = self.model
+        if not max_tokens:  # Use default max_tokens if not provided
+            max_tokens = self.max_tokens
+        if not temperature:  # Use default temperature if not provided
+            temperature = self.temperature
+        if not top_p:  # Use default top_p if not provided
+            top_p = self.top_p
+        if not openai_api_base:  # Use default openai_api_base if not provided
+            openai_api_base = self.openai_api_base
+
+        logger.debug(f"llm_filter() parameters:")
+        logger.debug(f'  {message=}')
+        logger.debug(f'  {history=}')
+        logger.debug(f'  {type(data)=} {data=}')
+        logger.debug(f'  {prompt=}')
+        logger.debug(f'  {model=}')
+        logger.debug(f'  {max_tokens=}')
+        logger.debug(f'  {temperature=}')
+        logger.debug(f'  {top_p=}')
+        logger.debug(f'  {openai_api_base=}')
+
+        llm = ChatOpenAI(
+            openai_api_base = openai_api_base,
+            model = model,
+            max_tokens = max_tokens,
+            temperature=temperature,
+            top_p = top_p,
+        )
+
+        history_langchain_format = [AIMessage(content=self.prompt),]
+        for msg in history:
+            logger.debug(f'{msg=}')
+            if msg['role'] == "user":
+                history_langchain_format.append(
+                    HumanMessage(content=msg['content']))
+            elif msg['role'] == "assistant":
+                history_langchain_format.append(AIMessage(content=msg['content']))
+
+        message = f"""
+        # User query
+        {message}
+
+        # Data
+        ```json
+        {json.dumps(data, indent=2)}
+        ```
+        """
+        logger.debug(f'{message=}')
+
+        history_langchain_format.append(HumanMessage(content=message))
+
+        response = llm.invoke(history_langchain_format)
+        history_langchain_format.append(HumanMessage(content=message))
+
+        response = llm.invoke(history_langchain_format)
+        response = self.clean_json_response(response.content)
+
+        if self.validator:
+            # Responce validation
+            try:
+                validated_data = self.validator.model_validate_json(response)
+                logger.debug(f'{validated_data=}')
+            except Exception as e:
+                logger.error(f"Validation error: {e}")
+                logger.error(f"Cleaned response: {response}")
+                response = {"question": "There seems to be something wrong with request processing. An invalid result was received. Try increasing 'Max new tokens' (max_tokens) parameter. If that doesn't help, contact support.", "queries": []}
+                return json.dumps(response)
+
         return response
 
     def validate(self, response):
