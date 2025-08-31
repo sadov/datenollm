@@ -274,3 +274,30 @@ class Server:
             return log_path
         else:
             return None
+
+    def load_prompt_with_datetime(self):
+        """Load prompt from file and inject current GMT date/time placeholders."""
+        try:
+            with open('prompt.md', 'r', encoding='utf-8') as f:
+                prompt_content = f.read()
+
+            # Get current date/time in GMT
+            import datetime
+            current_datetime = datetime.datetime.now(datetime.timezone.utc)
+            current_date = current_datetime.strftime("%Y-%m-%d")
+            current_year = current_datetime.strftime("%Y")
+            current_datetime_full = current_datetime.strftime("%Y-%m-%d %H:%M:%S GMT")
+            
+            # Replace placeholders with actual values
+            prompt_content = prompt_content.replace('{datetime}', current_date)
+            prompt_content = prompt_content.replace('{year}', current_year)
+            prompt_content = prompt_content.replace('{datetime_full}', current_datetime_full)
+
+            logger.debug(f"Prompt content: {prompt_content}")
+            return prompt_content
+        except FileNotFoundError:
+            logger.warning("prompt.md not found, using default prompt")
+            return self.prompt
+        except Exception as e:
+            logger.error(f"Error loading prompt: {e}")
+            return self.prompt
