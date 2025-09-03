@@ -106,7 +106,7 @@ class DatenoFilter(DatenoClient):
             max_tokens=max_tokens,
             temperature=temperature,
             top_p=top_p,
-            openai_api_base=openai_api_base
+            openai_api_base=openai_api_base,
             api_name="/filter",
         )
         return result
