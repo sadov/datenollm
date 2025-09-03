@@ -71,9 +71,7 @@ class DatenoClient:
             api_name="/like"
         )
 
-    def results2html(
-            data: list,
-            verbose: bool) -> str:
+    def results2html(self, data, verbose):
         result = self.client.predict(
             data=data,
             verbose=verbose,
@@ -83,18 +81,19 @@ class DatenoClient:
 
 class DatenoFilter(DatenoClient):
     def filter(
-        messages: list,
-        history: list,
-        data: list,
-        max_requests: int,
-        max_requests_per_call: int,
-        prompt: str,
-        model: str,
-        max_tokens: int,
-        temperature: float,
-        top_p: float,
-        openai_api_base: str = None
-    ) -> list:
+        self,
+        messages,
+        history,
+        data,
+        max_requests,
+        max_requests_per_call,
+        prompt,
+        model,
+        max_tokens,
+        temperature,
+        top_p,
+        openai_api_base=None
+    ):
         result = self.client.predict(
             messages=messages,
             history=history,
@@ -111,7 +110,7 @@ class DatenoFilter(DatenoClient):
         )
         return result
 
-    def filter2data(data: list, combined_output: list) -> list:
+    def filter2data(self, data, combined_output):
         result = self.client.predict(
             data=data,
             combined_output=combined_output,
