@@ -90,7 +90,7 @@ class DatenoFilter(DatenoClient):
         max_requests_per_call: int,
         prompt: str,
         model: str,
-        max_tokens: int = 2048,
+        max_tokens: int,
         temperature: float,
         top_p: float,
         openai_api_base: str = None
