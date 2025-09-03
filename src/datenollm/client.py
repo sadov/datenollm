@@ -71,6 +71,55 @@ class DatenoClient:
             api_name="/like"
         )
 
+    def results2html(
+            data: list,
+            verbose: bool) -> str:
+        result = self.client.predict(
+            data=data,
+            verbose=verbose,
+            api_name="/results2html",
+        )
+        return result
+
+class DatenoFilter(DatenoClient):
+    def filter(
+        messages: list,
+        history: list,
+        data: list,
+        max_requests: int,
+        max_requests_per_call: int,
+        prompt: str,
+        model: str,
+        max_tokens: int = 2048,
+        temperature: float,
+        top_p: float,
+        openai_api_base: str = None
+    ) -> list:
+        result = self.client.predict(
+            messages=messages,
+            history=history,
+            data=data,
+            max_requests=max_requests,
+            max_requests_per_call=max_requests_per_call,
+            prompt=prompt,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            openai_api_base=openai_api_base
+            api_name="/filter",
+        )
+        return result
+
+    def filter2data(data: list, combined_output: list) -> list:
+        result = self.client.predict(
+            data=data,
+            combined_output=combined_output,
+            api_name="/filter2data",
+        )
+        return result
+
+
 def read_flagged_log_csv(file_path):
     """
     Reads the flagged log CSV file and returns a list of langchain HumanMessage and AIMessage objects.
