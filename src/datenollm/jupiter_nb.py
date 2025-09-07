@@ -904,6 +904,7 @@ class DatenoSearchQuerySelector(QuerySelector):
         
         request = json.dumps({'queries': selected_queries})
         result = self.client.client.predict(llm_response=request, api_name="/dateno_search")
+        self.last_result = result
 
         # Process results and create dataframes
         display_dfs = []
