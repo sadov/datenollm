@@ -32,15 +32,6 @@ The main modules are located in [`src/datenollm/`](src/datenollm/):
 
 The `examples/` directory contains Jupyter notebooks (Google Colab compatible).
 
-Workflow steps:
-1. [`examples/dateno_llm_wf1-qery_assistant.ipynb`](examples/dateno_llm_wf1-qery_assistant.ipynb) — Query assistant agent
-2. [`examples/dateno_llm_wf2-dateno_search.ipynb`](examples/dateno_llm_wf2-dateno_search.ipynb) — Dateno search agent
-3. Datasets verification agent (in progress)
-
-
-
-Other example:
-
 - [`examples/dateno_llm_context_search.ipynb`](examples/dateno_llm_context_search.ipynb) — An example research study using Dateno's context-switching LLM search agent.
 - [`dateno-deep-research-workflow.ipynb`](examples/dateno-deep-research-workflow.ipynb) — An example of Deep Research Workflow
 
