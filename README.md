@@ -42,6 +42,7 @@ Workflow steps:
 Other example:
 
 - [`examples/dateno_llm_context_search.ipynb`](examples/dateno_llm_context_search.ipynb) — An example research study using Dateno's context-switching LLM search agent.
+- [`dateno-deep-research-workflow.ipynb`](examples/dateno-deep-research-workflow.ipynb) — An example of Deep Research Workflow
 
 
 ## Utilities
